@@ -1,0 +1,53 @@
+Sub CATMain()
+
+Dim DrwDoc As DrawingDocument
+Dim DrwSheets As DrawingSheets
+Dim DrwSheet As DrawingSheet
+Dim DrwViews As DrawingViews
+Dim DrwView As DrawingView
+Dim oSel As Selection
+Dim oSelView As Selection
+Dim Status
+
+On Error Resume Next
+
+If LCase(Right(CATIA.ActiveDocument.Name, 10)) <> "catdrawing" Then
+      MsgBox "Esta macro funciona con un CATDrawing abierto!", vbInformation, "Isolar Vista - Version 1.00"
+      Exit Sub
+End If
+
+Set DrwDoc = CATIA.ActiveDocument
+Set DrwSheets = DrwDoc.Sheets
+Set DrwSheet = DrwSheets.ActiveSheet
+Set DrwViews = DrwSheet.Views
+Set oSel = CATIA.ActiveDocument.Selection
+
+oSel.Clear
+
+Dim InputObjectType(0)
+InputObjectType(0) = "DrawingView"
+Status = "Normal"
+Status = oSel.SelectElement2(InputObjectType, "**********     Seleccione la vista!     **********", False)
+If Status = "Cancel" Then
+    MsgBox "Macro Cancelada!", vbExclamation, "Macro Cancelada por el Usuario!"
+    Exit Sub
+Else
+    Set DrwView = oSel.Item(1).Value
+    DrwView.FrameVisualization = True
+    DrwView.Activate
+    'Cambiar el tipo de linea
+    oSelView.Add DrwView
+    oSelView.visProperties.SetShow 0
+    Dim oSelgenElements As Selection
+    Set oSelgenElements = oSel.Selection
+    oSelgenElements.Search "CATDrwSearch.CATEarlyGenItem,sel"
+    oSelgenElements.visProperties.SetRealLineType 4, 0
+    oSelgenElements.visProperties.SetRealWidth 1, 0
+	oSelgenElements.visProperties.SetRealColor 0, 255, 0, 0
+    'Isolar la vista
+    DrwView.Isolate
+End If
+
+CATIA.StatusBar = "**********     TERMINADO!     **********"
+
+End Sub

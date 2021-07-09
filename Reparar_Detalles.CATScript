@@ -1,0 +1,21 @@
+Dim drawingDocument1 As Document
+Dim drawingSheets1 As DrawingSheets
+Dim drawingSheet1 As DrawingSheet
+Dim drawingViews1 As DrawingViews
+Dim drawingView1 As DrawingView
+
+
+Sub CATMain()
+
+Set drawingDocument1 = CATIA.ActiveDocument
+Set drawingSheets1 = drawingDocument1.Sheets
+Set drawingSheet1 = drawingSheets1.Item("DETALLES")
+Set drawingViews1 = drawingSheet1.Views
+
+For i=1 to drawingViews1.Count
+	If Right(drawingViews1.Item(i).Name,3) = "[2]" Then
+		drawingViews1.Item(i).Name = Left(drawingViews1.Item(i).Name,Len(drawingViews1.Item(i).Name)-3)
+	End If
+Next
+
+End Sub

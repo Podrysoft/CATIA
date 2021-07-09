@@ -1,0 +1,26 @@
+Language="VBSCRIPT"
+
+Sub CATMain()
+
+'set the active document (must be a CATPart)
+Dim myDoc As Document
+Set myDoc = CATIA.ActiveDocument
+
+Set Material = myDoc.Part.Parameters.CreateString("NOMBRE Y NUMERACION\Material", "F-111")
+
+end sub
+
+sub a
+'create an integer parameter
+'Dim thickness As IntParam
+Set thickness = myDoc.Part.Parameters.CreateInteger ("Material_Thickness", 2.0)
+
+'create a real number parameter
+'Dim revision As RealParam
+Set revision = myDoc.Part.Parameters.CreateReal("Revision", 2.5)
+
+'create a string number parameter
+'Dim material As StringParam
+Set material = myDoc.Part.Parameters.CreateString("Material", "F-111")
+
+End Sub

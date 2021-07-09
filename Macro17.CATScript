@@ -1,0 +1,96 @@
+Sub CATMain()
+
+Dim partDocument1 As Document
+Set partDocument1 = CATIA.ActiveDocument
+
+Dim part1 As Part
+Set part1 = partDocument1.Part
+
+Dim bodies1 As Bodies
+Set bodies1 = part1.Bodies
+
+Dim body1 As Body
+'Set body1 = bodies1.Item("MECANIZADO 3.2")
+
+
+
+Set body1 = bodies1.FindObjectByName(bodies1.InWorkObject.Parent.Parent.Name)
+
+
+
+part1.InWorkObject = body1
+
+Dim sketches1 As Sketches
+Set sketches1 = body1.Sketches
+
+Dim reference1 As Reference
+Set reference1 = part1.CreateReferenceFromName("Selection_RSur:(Face:(Brp:(Pad.1;1);None:();Cf11:());Assemble.1_ResultOUT;Z0;G6909)")
+
+Dim sketch1 As Sketch
+Set sketch1 = sketches1.Add(reference1)
+
+Dim arrayOfVariantOfDouble1(8)
+arrayOfVariantOfDouble1(0) = 0.000000
+arrayOfVariantOfDouble1(1) = -40.000000
+arrayOfVariantOfDouble1(2) = 0.000000
+arrayOfVariantOfDouble1(3) = 1.000000
+arrayOfVariantOfDouble1(4) = -0.000000
+arrayOfVariantOfDouble1(5) = 0.000000
+arrayOfVariantOfDouble1(6) = 0.000000
+arrayOfVariantOfDouble1(7) = 0.000000
+arrayOfVariantOfDouble1(8) = 1.000000
+sketch1.SetAbsoluteAxisData arrayOfVariantOfDouble1
+
+part1.InWorkObject = sketch1
+
+Dim factory2D1 As Factory2D
+Set factory2D1 = sketch1.OpenEdition()
+
+Dim geometricElements1 As GeometricElements
+Set geometricElements1 = sketch1.GeometricElements
+
+Dim axis2D1 As GeometricElement
+Set axis2D1 = geometricElements1.Item("AbsoluteAxis")
+
+Dim line2D1 As CATBaseDispatch
+Set line2D1 = axis2D1.GetItem("HDirection")
+
+line2D1.ReportName = 1
+
+Dim line2D2 As CATBaseDispatch
+Set line2D2 = axis2D1.GetItem("VDirection")
+
+line2D2.ReportName = 2
+
+Dim body2 As Body
+Set body2 = bodies1.Item("PartBody")
+
+Dim shapes1 As Shapes
+Set shapes1 = body2.Shapes
+
+Dim assemble1 As Shape
+Set assemble1 = shapes1.Item("BOCETO PRINCIPAL")
+
+Dim reference2 As Reference
+Set reference2 = part1.CreateReferenceFromBRepName("RSur:(Face:(Brp:(Pad.1;1);None:();Cf11:());WithPermanentBody;WithoutBuildError;WithSelectingFeatureSupport;MonoFond;MFBRepVersion_CXR15)", assemble1)
+
+Dim geometricElements2 As GeometricElements
+Set geometricElements2 = factory2D1.CreateProjections(reference2)
+
+sketch1.CloseEdition 
+
+part1.InWorkObject = body1
+
+part1.Update 
+
+sketch1.CloseEdition 
+
+Dim shapeFactory1 As Factory
+Set shapeFactory1 = part1.ShapeFactory
+
+Dim pocket1 As Pocket
+Set pocket1 = shapeFactory1.AddNewPocket(sketch1, 2.000000)
+
+part1.Update 
+
+End Sub

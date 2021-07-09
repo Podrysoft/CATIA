@@ -1,0 +1,46 @@
+Option Explicit
+
+	Dim oProd As Product
+	Dim drwViews As DrawingViews
+	Dim myLockStatus As Variant
+	Dim myFrame As Variant
+	Dim i As Integer
+	Dim oExt As String
+
+Sub CATMain()
+
+	On Error Resume Next
+	CATIA.DisplayFileAlerts = False
+	Set oProd = CATIA.ActiveDocument
+	If Err.Number <> 0 Then
+		MsgBox "No tiene documento abierto!", vbInformation
+		Exit Sub
+	End If
+
+	oExt=LCase(Mid(oProd.Name,InStr(1,oProd.Name,".")+1,Len(oProd.Name)-InStr(1,oProd.Name,".")))
+
+	If oExt = "catdrawing" then
+		Set drwViews = CATIA.ActiveDocument.Sheets.ActiveSheet.Views
+
+		'El bucle comienza en 3 porque las dos primeras vistas son
+		'vistas generadas automáticamente por CATIA Working Views, Sheet Background
+
+		myLockStatus = drwViews.Item(3).LockStatus
+		myFrame = drwViews.Item(3).FrameVisualization
+
+		For i = 3 To drwViews.Count
+			If drwViews.Item(i).LockStatus then
+				drwViews.Item(i).FrameVisualization = True
+			Else
+				drwViews.Item(i).FrameVisualization = False
+			End If
+			drwViews.Item(i).LockStatus = Not myLockStatus
+		Next
+	Else
+		MsgBox "Solo se pueden bloquear las vistas de un CATDrawing", vbInformation
+	End If
+
+	On Error Goto 0
+	CATIA.DisplayFileAlerts = True
+
+End Sub

@@ -1,0 +1,685 @@
+'----------------------------------------------------------------------------------------------------------------------------------
+'bib  23-07-2003
+'creation of the bounding box with 0mm offset on each face
+'the document must be a catpart
+'inputs:
+'	- a local axis 
+'	- a surface
+'----------------------------------------------------------------------------------------------------------------------------------
+
+Sub CATMain()
+'declaration des variables
+CATIA.DisplayFileAlerts = False
+
+	Dim Message, Style, Title, Response, MyString
+	Message = ("This macro will find the bounding box of a solid or a JOINED Surface with 0mm offset on each face" &_
+							(chr(13)) &_
+						 "	- The active document must be a CATPart"&_
+							(chr(13)) &_
+						"	- A local Axis will be created automatically"&_
+							(chr(13)) &_
+						"	- The dimensions of the bounding box will be saved in a file"&_
+							(chr(13)) &_
+						""&(chr(13))&_
+"	Do you want to continue ?")
+	Style = vbYesNo + vbDefaultButton2    'Define buttons.
+	Title = "Purpose "   
+	Response = MsgBox(Message, Style, Title)
+		If Response = vbYes Then    ' User chose Yes.
+   			 MyString = "Yes"
+
+'///////////////////////////////////// inserting an axis system
+
+Dim partDocument2 As Document
+Set partDocument2 = CATIA.ActiveDocument
+
+Dim part2 As Part
+Set part2 = partDocument2.Part
+
+Dim axisSystems1 As AxisSystems
+Set axisSystems1 = part2.AxisSystems
+
+Dim axisSystem1 As AxisSystem
+Set axisSystem1 = axisSystems1.Add()
+
+axisSystem1.OriginType = catAxisSystemOriginByCoordinates
+
+Dim arrayOfVariantOfDouble1(2)
+arrayOfVariantOfDouble1(0) = 0.000000
+arrayOfVariantOfDouble1(1) = 0.000000
+arrayOfVariantOfDouble1(2) = 0.000000
+axisSystem1.PutOrigin arrayOfVariantOfDouble1
+
+axisSystem1.XAxisType = catAxisSystemAxisByCoordinates
+
+Dim arrayOfVariantOfDouble2(2)
+arrayOfVariantOfDouble2(0) = 1.000000
+arrayOfVariantOfDouble2(1) = 0.000000
+arrayOfVariantOfDouble2(2) = 0.000000
+axisSystem1.PutXAxis arrayOfVariantOfDouble2
+
+axisSystem1.YAxisType = catAxisSystemAxisByCoordinates
+
+Dim arrayOfVariantOfDouble3(2)
+arrayOfVariantOfDouble3(0) = 0.000000
+arrayOfVariantOfDouble3(1) = 1.000000
+arrayOfVariantOfDouble3(2) = 0.000000
+axisSystem1.PutYAxis arrayOfVariantOfDouble3
+
+axisSystem1.ZAxisType = catAxisSystemAxisByCoordinates
+
+Dim arrayOfVariantOfDouble4(2)
+arrayOfVariantOfDouble4(0) = 0.000000
+arrayOfVariantOfDouble4(1) = 0.000000
+arrayOfVariantOfDouble4(2) = 1.000000
+axisSystem1.PutZAxis arrayOfVariantOfDouble4
+
+part2.UpdateObject axisSystem1
+
+axisSystem1.IsCurrent = True
+
+part2.Update 
+
+Dim settingControllers1 As SettingControllers
+Set settingControllers1 = CATIA.SettingControllers
+
+Dim visualizationSettingAtt1 As SettingController
+Set visualizationSettingAtt1 = settingControllers1.Item("CATVizVisualizationSettingCtrl")
+
+visualizationSettingAtt1.SaveRepository 
+
+'/////////////////////////////////////////////// start bounding box
+
+
+Dim axis
+Dim remake
+Dim partDocument1 As PartDocument
+Dim part1 As Part
+dim axisref as reference
+Dim ShapeFactory1 as ShapeFactory
+Dim hybridShapeFactory1 As HybridShapeFactory
+Dim sStatus As String
+Dim hybridShapeD1 , hybridShapeD2 ,hybridShapeD3 As HybridShapeDirection
+Dim  Default, a1,a2,a3,a4,a5,a6 'servent au changement des dimensions de la box
+Dim bodies1 As Bodies
+Dim body1 As Body
+Dim reference1 As Reference  'la shape
+Dim HybridShapeExtremum1 ,HybridShapeExtremum2 ,HybridShapeExtremum3 As HybridShapeExtremum
+Dim HybridShapeExtremum4 ,HybridShapeExtremum5 ,HybridShapeExtremum6 As HybridShapeExtremum
+Dim originCoord(2)
+
+
+Set partDocument1 = CATIA.ActiveDocument
+If (Instr(partDocument1.Name,".CATPart"))<> 0 Then
+	Set part1 = partDocument1.Part
+	Set Selection = partDocument1.Selection
+			part1.Update
+			Set hybridShapeFactory1 = part1.HybridShapeFactory
+			ReDim sFilter(0)
+			Msgbox "Select a local axis "
+			sFilter(0) = "AxisSystem"
+			sStatus = Selection.SelectElement2(sFilter, "select a  local axis", False)
+			dim axiscoord(2)
+			dim axissyst 
+			Set axissyst  = Selection.Item(1).value
+			set axisref= Selection.Item(1).value
+			ref_name_systaxis = axissyst.Name
+			axissyst.IsCurrent = 1
+			axissyst.name ="gertrude.toto" 
+			axname =  axissyst.Name
+				dim originpoint as HybridShapePointCoord
+				axisSyst.GetOrigin originCoord
+				set originpoint=  hybridShapeFactory1.AddNewPointCoord(originCoord(0) ,originCoord(1) ,originCoord(2) )
+				set axisref = Part1.CreateReferenceFromObject (originpoint)
+				axissyst.GetXAxis AxisCoord
+				Set hybridShapeD1 = hybridShapeFactory1.AddNewDirectionByCoord(AxisCoord(0), AxisCoord(1), AxisCoord(2))
+				axissyst.GetYAxis AxisCoord
+				Set hybridShapeD2 = hybridShapeFactory1.AddNewDirectionByCoord(AxisCoord(0), AxisCoord(1), AxisCoord(2))
+				axissyst.GetZAxis AxisCoord
+				Set hybridShapeD3 = hybridShapeFactory1.AddNewDirectionByCoord(AxisCoord(0), AxisCoord(1), AxisCoord(2))
+
+
+				dim Plane_line_1 as hybridshapelineptdir
+				set Plane_line_1=hybridShapeFactory1.addnewlinePtDir(originpoint,hybridShapeD1,0,0,false)
+				dim Plane_line_2 as hybridshapelineptdir
+				set Plane_line_2=hybridShapeFactory1.addnewlinePtDir(originpoint,hybridShapeD2,0,0,false)
+
+
+				Selection.Clear
+
+				Set partDocument1 = CATIA.ActiveDocument
+				Set part1 = partDocument1.Part
+
+				Dim oBodies As Bodies
+  			    Set oBodies = Part1.Bodies
+
+				Dim j As Integer
+				j = oBodies.Count
+				Set bodies1 = part1.Bodies
+				Set body1 = bodies1.Add()
+				body1.name="Boundingbox." & j
+
+				Set hybridBodies1 = body1.HybridBodies
+				Set hybridBody1 = hybridBodies1.Add
+				hybridBody1.Name = "definition_points"
+
+				'demande a l'utilisateur de selectionner la face
+				ReDim sFilter(0)
+				Msgbox "Select a Face "
+				sFilter(0) = "Face"
+				sStatus = Selection.SelectElement2(sFilter, "select a face", False)
+					If (sStatus = "Cancel") Then
+					    Exit Sub
+					End If
+
+				Set reference1= Selection.Item(1).Value
+				dim hybridShapeExtract1 as HybridShapeExtract 
+				Set hybridShapeExtract1 = hybridShapeFactory1.AddNewExtract(reference1)
+				hybridShapeExtract1.PropagationType = 1
+				hybridShapeExtract1.ComplementaryExtract = False
+				hybridShapeExtract1.IsFederated = False
+				set reference1 = hybridShapeExtract1
+
+				'creation des 6 points extremums de la shape selectionnée
+				Set HybridShapeExtremum1 = hybridShapeFactory1.AddNewExtremum(reference1, hybridShapeD1, 1)
+				Set HybridShapeExtremum2 = hybridShapeFactory1.AddNewExtremum(reference1, hybridShapeD1, 0)
+				Set hybridShapeExtremum3 = hybridShapeFactory1.AddNewExtremum(reference1, hybridShapeD2, 1)
+				Set hybridShapeExtremum4 = hybridShapeFactory1.AddNewExtremum(reference1, hybridShapeD2, 0)
+				Set hybridShapeExtremum5 = hybridShapeFactory1.AddNewExtremum(reference1, hybridShapeD3, 1)
+				Set hybridShapeExtremum6 = hybridShapeFactory1.AddNewExtremum(reference1, hybridShapeD3, 0)
+				part1.Update
+				'on se met dans l'open body "def_points"
+
+				Dim hybridBody2 As HybridBody
+				Set hybridBody2 = hybridBodies1.Item("definition_points")
+
+				hybridBody2.AppendHybridShape HybridShapeExtremum1
+				part1.InWorkObject = HybridShapeExtremum1
+				HybridShapeExtremum1.Name = "max_X"
+				hybridBody2.AppendHybridShape HybridShapeExtremum2
+				part1.InWorkObject = HybridShapeExtremum2
+				HybridShapeExtremum2.Name = "min_X"
+				hybridBody2.AppendHybridShape hybridShapeExtremum3
+				part1.InWorkObject = hybridShapeExtremum3
+				hybridShapeExtremum3.Name = "max_Y"
+				hybridBody2.AppendHybridShape hybridShapeExtremum4
+				part1.InWorkObject = hybridShapeExtremum4
+				hybridShapeExtremum4.Name = "min_Y"
+				hybridBody2.AppendHybridShape hybridShapeExtremum5
+				part1.InWorkObject = hybridShapeExtremum5
+				hybridShapeExtremum5.Name = "max_Z"
+				hybridBody2.AppendHybridShape hybridShapeExtremum6
+				part1.InWorkObject = hybridShapeExtremum6
+				hybridShapeExtremum6.Name = "min_Z"
+
+			part1.update
+
+		'creation des points aux meme coordonnees  que les extremums
+
+				Dim Ref1 as reference
+				Set Ref1 = part1.CreateReferenceFromObject(HybridShapeExtremum1)
+				Dim Point1 As HybridShapePointCoord
+				Set Point1 = hybridShapeFactory1.AddNewPointCoordWithReference(0, 0, 0, Ref1)
+				hybridBody2.AppendHybridShape Point1
+				set point_ref11=part1.CreateReferenceFromObject(Point1)
+				Dim Ref2 As Reference
+				Set Ref2 = part1.CreateReferenceFromObject(HybridShapeExtremum2)
+				Dim Point2 As HybridShapePointCoord
+				Set Point2 = hybridShapeFactory1.AddNewPointCoordWithReference(0,0 , 0, Ref2)
+				hybridBody2.AppendHybridShape Point2
+				set point_ref12=part1.CreateReferenceFromObject(Point2)
+				Dim Ref3 As Reference
+				Set Ref3 = part1.CreateReferenceFromObject(HybridShapeExtremum3)
+				Dim Point3 As HybridShapePointCoord
+				Set Point3 = hybridShapeFactory1.AddNewPointCoordWithReference(0, 0, 0, Ref3)
+				hybridBody2.AppendHybridShape Point3
+				set point_ref13=part1.CreateReferenceFromObject(Point3)
+				Dim Ref4 As Reference
+				Set Ref4 = part1.CreateReferenceFromObject(HybridShapeExtremum4)
+				Dim Point4 As HybridShapePointCoord
+				Set Point4 = hybridShapeFactory1.AddNewPointCoordWithReference(0, 0, 0, Ref4)
+				hybridBody2.AppendHybridShape Point4
+				set point_ref14=part1.CreateReferenceFromObject(Point4)
+				Dim Ref5 As Reference
+				Set Ref5 = part1.CreateReferenceFromObject(HybridShapeExtremum5)
+				Dim Point5 As HybridShapePointCoord
+				Set Point5 = hybridShapeFactory1.AddNewPointCoordWithReference(0, 0, 0, Ref5)
+				hybridBody2.AppendHybridShape Point5
+				set point_ref5=part1.CreateReferenceFromObject(Point5)
+				Dim Ref6 As Reference
+				Set Ref6 = part1.CreateReferenceFromObject(HybridShapeExtremum6)
+				Dim Point6 As HybridShapePointCoord
+				Set Point6 = hybridShapeFactory1.AddNewPointCoordWithReference(0, 0, 0, Ref6)
+				hybridBody2.AppendHybridShape Point6
+				set point_ref6= part1.CreateReferenceFromObject(Point6)
+
+' Update pour les points avant creation du skrtch (12/09/2003)
+
+				part1.update
+' Fin Update
+
+				axissyst.IsCurrent = 1
+
+				'creation d'un sketch 
+
+				Set sketches1 = hybridBody1.HybridSketches
+		
+				Set reference_axis_syst = part1.CreateReferenceFromName("Selection_RSur:(Face:(Brp:(gertrude.toto;1);None:());gertrude.toto)")
+				Set standard_body_sketch1 = sketches1.Add(reference_axis_syst)
+				Set factory2D1 = standard_body_sketch1.OpenEdition()
+				Set geometricElements1 =standard_body_sketch1.GeometricElements
+				Set axis2D1 = geometricElements1.Item("AbsoluteAxis")
+				Set line_HDirection = axis2D1.GetItem("HDirection")
+				line_HDirection.ReportName = 1
+				Set line_VDirection = axis2D1.GetItem("VDirection")
+				line_VDirection.ReportName = 2
+	
+
+			'Creation d'un carré dans le sketch
+				ponto = 20000
+				Set point_ref_1 = factory2D1.CreatePoint(-ponto, -ponto)
+				point_ref_1.ReportName = 3
+				Set point_ref_2 = factory2D1.CreatePoint(ponto, -ponto)
+				point_ref_2.ReportName = 4
+				Set point_ref_3 = factory2D1.CreatePoint(ponto, ponto)
+				point_ref_3.ReportName = 5
+				Set point_ref_4 = factory2D1.CreatePoint(-ponto, ponto)
+				point_ref_4.ReportName = 6
+		
+	
+				Set line_ref_1_2 = factory2D1.CreateLine(-ponto, -ponto, ponto, -ponto)
+				line_ref_1_2.ReportName = 7
+				line_ref_1_2.StartPoint = point_ref_1
+				line_ref_1_2.EndPoint = point_ref_2
+		
+				Set line_ref_2_3 = factory2D1.CreateLine(ponto, -ponto, ponto, ponto)
+				line_ref_2_3.ReportName = 8
+				line_ref_2_3.StartPoint = point_ref_2
+				line_ref_2_3.EndPoint = point_ref_3
+			
+				Set line_ref_3_4 = factory2D1.CreateLine(-ponto, ponto, ponto, ponto)
+				line_ref_3_4.ReportName = 9
+				line_ref_3_4.StartPoint = point_ref_4
+				line_ref_3_4.EndPoint = point_ref_3
+			
+				Set line_ref_4_1 = factory2D1.CreateLine(-ponto, -ponto, -ponto, ponto)
+				line_ref_4_1.ReportName = 10
+				'line_ref_4_1.Construction = True
+				line_ref_4_1.StartPoint = point_ref_1
+				line_ref_4_1.EndPoint = point_ref_4
+	
+				'Referencement et creation des contraintes
+				Set reference_line_ref_1_2 = part1.CreateReferenceFromObject(line_ref_1_2)
+				Set reference_line_ref_2_3 =part1.CreateReferenceFromObject(line_ref_2_3)
+				Set reference_line_ref_3_4 =part1.CreateReferenceFromObject(line_ref_3_4)
+				Set reference_line_ref_4_1 =part1.CreateReferenceFromObject(line_ref_4_1)
+			
+				Set electrode_constraints = standard_body_sketch1.Constraints
+
+' Modif de la refrence des points du 12/09/2003)
+				
+				Set constraint_toto_2 = electrode_constraints.AddBiEltCst(catCstTypeDistance,point_ref11, reference_line_ref_2_3)
+				Set constraint_toto_3 = electrode_constraints.AddBiEltCst(catCstTypeDistance, point_ref13, reference_line_ref_3_4)
+				Set constraint_toto_4 = electrode_constraints.AddBiEltCst(catCstTypeDistance, reference_line_ref_4_1, point_ref12)
+				Set constraint_toto_1 = electrode_constraints.AddBiEltCst(catCstTypeDistance,reference_line_ref_1_2, point_ref14 )
+'Fin modif
+				Dim length1 As Dimension
+				Set length1 =constraint_toto_1.Dimension
+				length1.Value = 0
+				Dim length2 As Dimension
+				Set length2 =constraint_toto_2.Dimension
+				length2.Value = 0
+				Dim length3 As Dimension
+				Set length3 =constraint_toto_3.Dimension
+				length3.Value = 0
+				Dim length4 As Dimension
+				Set length4 =constraint_toto_4.Dimension
+				length4.Value = 0
+		
+				standard_body_sketch1.closeEdition()
+				part1.update
+
+'----------------------------------------------------------------------------------------------------------------------------------
+'creation des plans inférieur et superieur matches sur les extremums
+'----------------------------------------------------------------------------------------------------------------------------------
+
+				dim plan_inferieur as hybridshapeplaneoffsetpt
+				dim plan_origin as hybridshapePlanes2lines
+				dim Origin_line_1 as reference
+				set Origin_line_1 = part1.createreferencefromobject(line_HDirection)
+				dim Origin_line_2 as reference
+				set Origin_line_2 = part1.createreferencefromobject(line_VDirection)
+				set plan_origin = hybridShapeFactory1.addnewplane2lines(Origin_line_1,Origin_line_2)
+				dim ref_plan_origin as reference
+				set ref_plan_origin = part1.createreferencefromobject(plan_origin)
+				Set Ref6 = part1.CreateReferenceFromObject(HybridShapeExtremum6)
+				set plan_inferieur=hybridshapefactory1.addnewplaneOffsetPt(ref_plan_origin,point_ref6)
+				hybridBody2.AppendHybridShape plan_inferieur
+				part1.InWorkObject = plan_inferieur
+
+
+				dim plan_superieur as hybridshapeplaneoffsetpt
+				Set Ref5 = part1.CreateReferenceFromObject(HybridShapeExtremum5)
+				set plan_superieur=hybridshapefactory1.addnewplaneOffsetPt(ref_plan_origin,point_ref5)
+				hybridBody2.AppendHybridShape plan_superieur
+				part1.InWorkObject = plan_superieur
+
+				part1.Update
+'----------------------------------------------------------------------------------------------------------------------------------
+'creation des plans inférieur et superieur offsetes
+'----------------------------------------------------------------------------------------------------------------------------------
+
+				Dim Point_inf As HybridShapePointCoord
+				Set Point_inf = hybridShapeFactory1.AddNewPointCoordWithReference(0, 0, 0, point_ref6)
+				hybridBody2.AppendHybridShape Point_inf
+				dim ref_point_inf as reference
+				set ref_point_inf =part1.createreferencefromobject(Point_inf)
+
+				'projection du point inferieur sur le plan superieur 
+	
+				dim proj_pt_inf as hybridshapeproject
+				set proj_pt_inf = hybridshapefactory1.addnewproject(point_ref6, plan_superieur )
+				hybridBody2.AppendHybridShape proj_pt_inf 
+				part1.InWorkObject = proj_pt_inf
+
+				Dim Point_sup As HybridShapePointCoord
+				Set Point_sup= hybridShapeFactory1.AddNewPointCoordWithReference(0, 0, 0, proj_pt_inf)
+				hybridBody2.AppendHybridShape Point_sup
+				dim ref_point_sup as reference
+				set ref_point_sup =part1.createreferencefromobject(Point_sup)
+
+				dim line_guide as hybridshapelineptpt
+				set line_guide=hybridshapefactory1.addnewlineptpt( ref_point_sup,ref_point_inf)
+				hybridBody2.AppendHybridShape line_guide 
+				part1.InWorkObject = line_guide 
+				set ref_guideline =part1.createreferencefromobject(line_guide)
+
+				dim oStart as length
+				set oStart=line_guide.beginoffset
+				oStart.value =0
+				dim oEnd as length
+				set oEnd=line_guide.endoffset
+				oEnd.value =0
+
+				Set constraints_for_z = part1.Constraints
+				Set constraint_dz =constraints_for_z.AddMonoEltCst(catCstTypeLength,ref_guideline )
+				set length_dz= constraint_dz.Dimension 				
+
+		part1.update
+
+
+'----------------------------------------------------------------------------------------------------------------------------------
+'creation  second sketch
+'----------------------------------------------------------------------------------------------------------------------------------
+
+
+				Set sketches2 = hybridBody1.HybridSketches
+				Set standard_body_sketch2 = sketches2.Add(plan_inferieur)
+
+				Set factory2D2 = standard_body_sketch2.OpenEdition()
+				Set geometricElements2 =standard_body_sketch2.GeometricElements
+				Set axis2D1 = geometricElements1.Item("AbsoluteAxis")
+
+				'Creation d'un carré dans le sketch
+				pont = 200000
+				Set point_ref1_1 = factory2D2.CreatePoint(-pont, -pont)
+				Set point_ref1_2 = factory2D2.CreatePoint(pont, -pont)
+				Set point_ref1_3 = factory2D2.CreatePoint(pont, pont)
+				Set point_ref1_4 = factory2D2.CreatePoint(-pont, pont)
+	
+
+				Set line_ref1_1_2 = factory2D2.CreateLine(-pont, -pont, pont, -pont)
+				line_ref1_1_2.StartPoint = point_ref1_1
+				line_ref1_1_2.EndPoint = point_ref1_2
+	
+				Set line_ref1_2_3 = factory2D2.CreateLine(pont, -pont, pont, pont)
+				line_ref1_2_3.StartPoint = point_ref1_2
+				line_ref1_2_3.EndPoint = point_ref1_3
+	
+				Set line_ref1_3_4 = factory2D2.CreateLine(-pont, pont, pont, pont)
+				line_ref1_3_4.StartPoint = point_ref1_4
+				line_ref1_3_4.EndPoint = point_ref1_3
+	
+				Set line_ref1_4_1 = factory2D2.CreateLine(-pont, -pont, -pont, pont)
+				line_ref1_4_1.StartPoint = point_ref1_1
+				line_ref1_4_1.EndPoint = point_ref1_4
+
+				'Referencement et creation des contraintes
+
+				Set reference_line_ref1_1_2 =part1.CreateReferenceFromObject(line_ref1_1_2)
+				Set reference_line_ref1_2_3 =part1.CreateReferenceFromObject(line_ref1_2_3)
+				Set reference_line_ref1_3_4 =part1.CreateReferenceFromObject(line_ref1_3_4)
+				Set reference_line_ref1_4_1 =part1.CreateReferenceFromObject(line_ref1_4_1)
+
+				Set reference_line_ref_1_2 =part1.CreateReferenceFromObject(line_ref_1_2)
+				Set reference_line_ref_2_3 =part1.CreateReferenceFromObject(line_ref_2_3)
+				Set reference_line_ref_3_4 =part1.CreateReferenceFromObject(line_ref_3_4)
+				Set reference_line_ref_4_1 =part1.CreateReferenceFromObject(line_ref_4_1)
+
+				set proj_1_2 = factory2D2.CreateProjection(reference_line_ref_1_2)
+				set proj_2_3 = factory2D2.CreateProjection(reference_line_ref_2_3)
+				set proj_3_4= factory2D2.CreateProjection(reference_line_ref_3_4)
+				set proj_4_1 = factory2D2.CreateProjection(reference_line_ref_4_1)
+
+				set ref_line_sk1_1_2=part1.createreferencefromobject(proj_1_2)
+				set ref_line_sk1_2_3=part1.createreferencefromobject(proj_2_3)
+				set ref_line_sk1_3_4=part1.createreferencefromobject(proj_3_4)
+				set ref_line_sk1_4_1=part1.createreferencefromobject(proj_4_1)
+	
+				Set electrode_constraints = standard_body_sketch2.Constraints
+				Set constraint_toto_11 = electrode_constraints.AddBiEltCst(catCstTypeDistance, reference_line_ref1_1_2, ref_line_sk1_1_2)
+				Set constraint_toto_12 = electrode_constraints.AddBiEltCst(catCstTypeDistance,  ref_line_sk1_2_3, reference_line_ref1_2_3)
+				Set constraint_toto_13 = electrode_constraints.AddBiEltCst(catCstTypeDistance,  ref_line_sk1_3_4, reference_line_ref1_3_4)
+				Set constraint_toto_14 = electrode_constraints.AddBiEltCst(catCstTypeDistance, reference_line_ref1_4_1,ref_line_sk1_4_1 )
+				'Dim length11 As Dimension
+				Set length11 =constraint_toto_11.Dimension
+				length11.Value = 0
+				Dim length12 As Dimension
+				Set length12 =constraint_toto_12.Dimension
+				length12.Value = 0
+				Dim length13 As Dimension
+				Set length13 =constraint_toto_13.Dimension
+				length13.Value = 0
+				Dim length14 As Dimension
+				Set length14 =constraint_toto_14.Dimension
+				length14.Value = 0
+
+				standard_body_sketch2.closeEdition()
+part1.update
+'----------------------------------------------------------------------------------------------------------------------------------
+'creation  third sketch
+'----------------------------------------------------------------------------------------------------------------------------------
+
+
+				Set sketches3 = hybridBody1.HybridSketches
+				Set standard_body_sketch3 = sketches3.Add(plan_inferieur)
+				Set factory2D3 = standard_body_sketch3.OpenEdition()
+				Set geometricElements3 =standard_body_sketch3.GeometricElements
+				Set axis2D1 = geometricElements1.Item("AbsoluteAxis")
+	
+
+				'Referencement et creation des contraintes
+
+				Set reference_line_ref1_1_2 =part1.CreateReferenceFromObject(line_ref1_1_2)
+				Set reference_line_ref1_2_3 =part1.CreateReferenceFromObject(line_ref1_2_3)
+				Set reference_line_ref1_3_4 =part1.CreateReferenceFromObject(line_ref1_3_4)
+				Set reference_line_ref1_4_1 =part1.CreateReferenceFromObject(line_ref1_4_1)
+
+				set proj1_1_2 = factory2D3.CreateProjection(reference_line_ref1_1_2)
+				set proj1_2_3 = factory2D3.CreateProjection(reference_line_ref1_2_3)
+				set proj1_3_4= factory2D3.CreateProjection(reference_line_ref1_3_4)
+				set proj1_4_1 = factory2D3.CreateProjection(reference_line_ref1_4_1)
+
+				set ref_proj1_1_2 = part1.CreateReferenceFromObject(proj1_1_2)
+				set ref_proj1_2_3 = part1.CreateReferenceFromObject(proj1_2_3)
+				set ref_proj1_3_4= part1.CreateReferenceFromObject(proj1_3_4)
+				set ref_proj1_4_1 = part1.CreateReferenceFromObject(proj1_4_1)
+
+				set constraints_dim= standard_body_sketch3.constraints
+				Set constraint_dx = constraints_dim.AddMonoEltCst(catCstTypeLength,ref_proj1_1_2 )
+				Set constraint_dy = constraints_dim.AddMonoEltCst(catCstTypeLength,ref_proj1_2_3 )
+				Set length_dx =constraint_dx.Dimension
+				dx_value=length_dx.value
+				Set length_dy=constraint_dy.Dimension
+				dy_value=length_dy.value
+
+				standard_body_sketch3.closeEdition()
+part1.update
+
+
+				'creation des 6 parametres pour changer la dimension
+				dim string_1 as string
+				string_1="Offset_Bbox_Max_X." & j
+				dim string_2 as string
+				string_2="Offset_Bbox_Min_X." & j
+				dim string_3 as string
+				string_3="Offset_Bbox_Max_Y." & j
+				dim string_4 as string
+				string_4="Offset_Bbox_Min_Y." & j
+				dim string_5 as string
+				string_5="Offset_Bbox_Max_Z." & j
+				dim string_6 as string
+				string_6="Offset_Bbox_Min_Z." & j
+				dim string_7 as string
+				string_7="Bbox_dx." & j
+				dim string_8 as string
+				string_8="Bbox_dy." & j
+				dim string_9 as string
+				string_9="Bbox_dz." & j
+
+				Dim Offset_Bbox_Max_X As RealParam
+				Set Offset_Bbox_Max_X = part1.Parameters.CreateDimension( string_1,"Length", 0)
+				Dim Offset_Bbox_Min_X As RealParam
+ 				Set Offset_Bbox_Min_X= part1.Parameters.CreateDimension( string_2,"Length", 0)
+				 Dim Offset_Bbox_Max_Y As RealParam
+				Set Offset_Bbox_Max_Y= part1.Parameters.CreateDimension( string_3,"Length", 0)
+				Dim Offset_Bbox_Min_Y As RealParam
+ 				Set Offset_Bbox_Min_Y= part1.Parameters.CreateDimension( string_4,"Length", 0)
+				Dim  Offset_Bbox_Max_Z As RealParam
+ 				Set  Offset_Bbox_Max_Z= part1.Parameters.CreateDimension( string_5,"Length", 0)
+				Dim  Offset_Bbox_Min_Z As RealParam
+				Set  Offset_Bbox_Min_Z= part1.Parameters.CreateDimension( string_6,"Length", 0)
+				Set Bbox_dx_hidden= part1.Parameters.CreateDimension(string_7,"Length",dx_value)
+				Set  Bbox_dy_hidden= part1.Parameters.CreateDimension(string_8,"Length",dy_value)
+				Set Bbox_dz_hidden= part1.Parameters.CreateDimension(string_9, "Length",length_dz.value)
+				Bbox_dx_hidden.hidden=True
+				Bbox_dy_hidden.hidden=True
+				Bbox_dz_hidden.hidden=True
+				Set Bbox_dx= part1.Parameters.CreateDimension(string_7,"Length",0)
+				Set  Bbox_dy= part1.Parameters.CreateDimension(string_8,"Length",0)
+				Set Bbox_dz= part1.Parameters.CreateDimension(string_9,"Length",0)
+
+
+				'creation des formules pour modifier les dimensions de la boite
+
+
+				Dim Formula_1 As Formula
+				Set Formula_1 = part1.Relations.CreateFormula ("formula_Bbox_1."& j,	 "",length14, "Offset_Bbox_Min_X." & j )
+				Dim Formula_2 As Formula
+				Set Formula_2 = part1.Relations.CreateFormula ("formula_Bbox_2."& j,	 "",length12, "Offset_Bbox_Max_X."& j )
+				Dim Formula_3 As Formula
+				Set Formula_3 = part1.Relations.CreateFormula ("formula_Bbox_4."& j,	 "",length11, "Offset_Bbox_Min_Y." & j )
+				Dim Formula_4 As Formula
+				Set Formula_4 = part1.Relations.CreateFormula ("formula_Bbox_4."& j,	 "",length13, "Offset_Bbox_Max_Y."& j )
+				Dim Formula_5 As Formula
+				Set Formula_5 = part1.Relations.CreateFormula ("formula_Bbox_5."& j,	 "",oEnd , " Offset_Bbox_Min_Z." & j  )
+				Dim Formula_6 As Formula
+				Set Formula_6 = part1.Relations.CreateFormula ("formula_Bbox_6."& j,	 "",oStart, " Offset_Bbox_Max_Z." & j  )
+				Dim Formula_7 As Formula
+				Set Formula_7 = part1.Relations.CreateFormula ("formula_Bbox_7."& j,	 "", Bbox_dx ,"Bbox_dx." & j  & "+Offset_Bbox_Min_X." & j & "+Offset_Bbox_Max_X." & j &"-0mm")
+				Dim Formula_8 As Formula
+				Set Formula_8 = part1.Relations.CreateFormula ("formula_Bbox_8."& j,	 "", Bbox_dy ,"Bbox_dy." & j  & "+Offset_Bbox_Min_Y." & j & "+Offset_Bbox_Max_Y." & j &"-0mm")
+				Dim Formula_9 As Formula
+				Set Formula_9 = part1.Relations.CreateFormula ("formula_Bbox_9."& j,	 "", Bbox_dz ,"Bbox_dz." & j  & "+Offset_Bbox_Min_Z." & j & "+Offset_Bbox_Max_Z." & j &"-0mm")
+
+
+'----------------------------------------------------------------------------------------------------------------------------------
+'creation  sweep
+'----------------------------------------------------------------------------------------------------------------------------------
+
+				set sweepref_1 = part1.createreferencefromobject(standard_body_sketch3 )
+				set guide1 = part1.createreferencefromobject(line_guide )
+				Dim sweep1 as HybridShapeSweepExplicit
+				set sweep1 =hybridShapeFactory1.AddNewSweepExplicit(sweepref_1,guide1 )
+				hybridBody2.AppendHybridShape sweep1
+				part1.InWorkObject = sweep1
+				part1.update
+
+
+				'creation de la closed surface
+
+				Set shapeFactory1 = part1.ShapeFactory
+				Set hybridBodies1 = body1.HybridBodies
+				Set hybridBody1 = hybridBodies1.Item("definition_points")
+				Dim hybridShapes1 As HybridShapes
+				Set hybridShapes1 = hybridBody1.HybridShapes
+
+				Dim refer1 As Reference
+				Set refer1 = part1.CreateReferenceFromObject(sweep1)
+	
+				Dim closeSurface1 As CloseSurface
+				Set closeSurface1 = shapeFactory1.AddNewCloseSurface(refer1 )
+				closeSurface1.name = "BoundingBox"
+			part1.Update 
+
+				selection.Clear
+				selection.Add(hybridBody1)
+				selection.VisProperties.SetShow catVisPropertyNoShowAttr
+				selection.Clear
+				selection.Add(Body1)
+				selection.VisProperties.SetRealColor 255,255,128,0
+				selection.visProperties.SetRealOpacity 150,1
+				selection.Visproperties.SetRealWidth 4,1
+				part1.Update
+			axissyst.Name=ref_name_systaxis
+			
+		else Msgbox "The active document must be a CATPart"
+		end if
+
+	Else    ' User chose No.
+   	MyString = "No"
+	End If
+
+'//////////////////////////////// write dimensions to file
+
+Dim catDoc As PartDocument
+Dim catPart As Part
+
+Set catDoc=CATIA.ActiveDocument
+Set catPart=catDoc.Part
+
+Dim Bbox_dx As String
+Bbox_dx=catPart.Parameters.Item("Bbox_dx." & j).ValueAsString
+'MsgBox "Bbox_dx =" & Bbox_dx
+
+Dim Bbox_dy As String
+Bbox_dy=catPart.Parameters.Item("Bbox_dy." & j).ValueAsString
+'MsgBox "Bbox_dy =" & Bbox_dy
+
+Dim Bbox_dz As String
+Bbox_dz=catPart.Parameters.Item("Bbox_dz." & j).ValueAsString
+'MsgBox "Bbox_dz =" & Bbox_dz
+
+'--------------------------------------------------------------------------------
+'	The location of the result file
+'--------------------------------------------------------------------------------
+Dim filename As String
+
+filename = CATIA.FileSelectionBox("Where do you want to save the result file", "*.txt", CatFileSelectionModeSave)
+
+Set Datos = CATIA.FileSystem.CreateFile(filename & ".txt" , True)
+
+Set ostream = Datos.OpenAsTextStream("ForAppending")
+
+'Writes heading:
+sDateTime = CStr(Date) + Chr(32) + CStr(time)
+
+oStream.Write(sDateTime + sLF & Chr(10))
+ostream.Write ("Bbox_dx =" & Bbox_dx & Chr(10))
+ostream.Write ("Bbox_dy =" & Bbox_dy & Chr(10))
+ostream.Write ("Bbox_dz =" & Bbox_dz & Chr(10))
+
+
+
+
+End Sub

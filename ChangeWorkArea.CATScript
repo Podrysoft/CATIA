@@ -1,0 +1,33 @@
+'****************************************************************
+'ChangeWorkArea
+'****************************************************************
+Dim m_MacroNameVersion As String
+Sub CATMain()
+
+ On Error Resume Next
+  
+ m_MacroNameVersion = "2D Change Work Area"
+  
+ CATIA.StatusBar = m_MacroNameVersion
+  
+  Set m_oActiveDoc = CATIA.ActiveDocument
+  If Err.Number <> 0 Then
+      MsgBox "No tiene documento abierto!", vbInformation, m_MacroNameVersion
+      Exit Sub
+  End If
+  
+  If LCase(Right(m_oActiveDoc.Name, 10)) <> "catdrawing" Then
+      MsgBox "Esta macro funciona con un CATDrawing abierto!", vbInformation, m_MacroNameVersion
+      Exit Sub
+  End If
+  
+  Set m_oDrwSheets = m_oActiveDoc.Sheets
+  Set m_oDrwSheet = m_oDrwSheets.ActiveSheet
+
+  If m_oDrwSheet.Views.ActiveView.Name = m_oDrwSheet.Views.Item(2).Name Then
+      m_oDrwSheet.Views.Item(1).Activate
+  Else
+      m_oDrwSheet.Views.Item(2).Activate
+  End If
+
+End Sub

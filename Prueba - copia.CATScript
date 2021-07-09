@@ -1,0 +1,41 @@
+'Option Explicit
+
+Dim ProdDoc As Product
+Dim i As Integer
+Dim str As String
+
+Sub CATMain()
+
+Set prodDoc1 = CATIA.ActiveDocument
+Set prod1 = prodDoc1.Product
+Set prods1=prod1.Products
+
+For i = 1 to prods1.Count
+    str=str & prods1.Item(i).Name & Chr(10)
+Next
+
+MsgBox Prods1.Count
+MsgBox str, vbInformation
+
+Dim Selection1 As Selection
+
+Set selection1 = reorder.prodDoc1.Selection
+selection1.Add reorder.prod1.products.item(i)
+selection1.cut
+set selection2 = CATIA.ActiveDocument.Selection
+selection2.Add reorder.prod1
+selection2.paste
+
+
+
+'Set ProdDoc = CATIA.ActiveDocument.Product.Products
+
+'For i = 1 to ProdDoc.Count
+
+'    str=str & ProdDoc.Item(i).Name & Chr(10)
+
+'Next
+'MsgBox ProdDoc.Count
+'MsgBox str, vbInformation
+
+End Sub

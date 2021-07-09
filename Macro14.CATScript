@@ -1,0 +1,265 @@
+Language="VBSCRIPT"
+
+Sub CATMain()
+
+Dim drawingDocument1 As Document
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Dim selection1 As Selection
+Set selection1 = drawingDocument1.Selection
+
+selection1.Clear 
+
+Dim drawingSheets1 As DrawingSheets
+Set drawingSheets1 = drawingDocument1.Sheets
+
+Dim drawingSheet1 As DrawingSheet
+Set drawingSheet1 = drawingSheets1.Item("OXICORTE")
+
+Dim drawingViews1 As DrawingViews
+Set drawingViews1 = drawingSheet1.Views
+
+Dim drawingView1 As DrawingView
+Set drawingView1 = drawingViews1.Item("Front view")
+
+selection1.Add drawingView1
+
+selection1.Copy 
+
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Dim selection2 As Selection
+Set selection2 = drawingDocument1.Selection
+
+selection2.Clear 
+
+Dim drawingSheet2 As DrawingSheet
+Set drawingSheet2 = drawingSheets1.Item("DETALLES")
+
+selection2.Add drawingSheet2
+
+selection2.Paste 
+
+drawingSheet2.Activate 
+
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Set drawingSheets1 = drawingDocument1.Sheets
+
+Set drawingSheet2 = drawingSheets1.ActiveSheet
+
+Dim drawingViews2 As DrawingViews
+Set drawingViews2 = drawingSheet2.Views
+
+Dim drawingView2 As DrawingView
+Set drawingView2 = drawingViews2.ActiveView
+
+Dim drawingViewGenerativeBehavior1 As DrawingViewGenerativeBehavior
+Set drawingViewGenerativeBehavior1 = drawingView2.GenerativeBehavior
+
+Dim drawingView3 As DrawingView
+Set drawingView3 = drawingViews2.Add("AutomaticNaming")
+
+Dim drawingViewGenerativeBehavior2 As DrawingViewGenerativeBehavior
+Set drawingViewGenerativeBehavior2 = drawingView3.GenerativeBehavior
+
+drawingViewGenerativeBehavior2.DefineIsometricView 1.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000
+
+drawingView3.x = 564.670776
+
+drawingView3.y = -327.702026
+
+Dim double1 As Double
+double1 = drawingSheet2.Scale
+
+drawingView3.Scale = 1.000000
+
+drawingView3.Activate 
+
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Dim selection3 As Selection
+Set selection3 = drawingDocument1.Selection
+
+selection3.Clear 
+
+selection3.Add drawingSheet1
+
+selection3.Paste 
+
+Dim drawingView4 As DrawingView
+Set drawingView4 = drawingViews1.Item("Front view[2]")
+
+drawingView4.x = -123.500312
+
+drawingView4.y = 168.168977
+
+Dim drawingDimensions1 As DrawingView
+Set drawingDimensions1 = drawingViews1.Item("Front view[2]")
+
+Dim drawingDimension1 As DrawingDimension
+Set drawingDimension1 = drawingDimensions1.Item("Dimension.2")
+
+Dim boolean1 As Boolean
+boolean1 = drawingDimension1.Forshortened
+
+Dim boolean2 As Boolean
+boolean2 = drawingDimension1.Forshortened
+
+Dim boolean3 As Boolean
+boolean3 = drawingDimension1.Forshortened
+
+Dim boolean4 As Boolean
+boolean4 = drawingDimension1.Forshortened
+
+Dim drawingDimension2 As DrawingDimension
+Set drawingDimension2 = drawingDimensions1.Item("Dimension.4")
+
+Dim boolean5 As Boolean
+boolean5 = drawingDimension2.Forshortened
+
+Dim boolean6 As Boolean
+boolean6 = drawingDimension2.Forshortened
+
+Dim boolean7 As Boolean
+boolean7 = drawingDimension2.Forshortened
+
+Dim boolean8 As Boolean
+boolean8 = drawingDimension2.Forshortened
+
+Dim sketch1 As DrawingView
+Set sketch1 = drawingViews1.Item("Front view[2]")
+
+Dim factory2D1 As Factory2D
+Set factory2D1 = sketch1.OpenEdition()
+
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Dim selection4 As Selection
+Set selection4 = drawingDocument1.Selection
+
+selection4.Clear 
+
+selection4.Add drawingView4
+
+selection4.Copy 
+
+drawingSheet2.Activate 
+
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Dim selection5 As Selection
+Set selection5 = drawingDocument1.Selection
+
+selection5.Clear 
+
+selection5.Add drawingView3
+
+selection5.Paste 
+
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Dim selection6 As Selection
+Set selection6 = drawingDocument1.Selection
+
+selection6.Clear 
+
+selection6.Add drawingView3
+
+selection6.Paste 
+
+drawingSheet1.Activate 
+
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Dim selection7 As Selection
+Set selection7 = drawingDocument1.Selection
+
+selection7.Clear 
+
+Dim geometricElements1 As GeometricElements
+Set geometricElements1 = drawingView4.GeometricElements
+
+Dim line2D1 As GeometricElement
+Set line2D1 = geometricElements1.Item("Line.1")
+
+selection7.Add line2D1
+
+Dim circle2D1 As GeometricElement
+Set circle2D1 = geometricElements1.Item("Circle.1")
+
+selection7.Add circle2D1
+
+Dim circle2D2 As GeometricElement
+Set circle2D2 = geometricElements1.Item("Circle.2")
+
+selection7.Add circle2D2
+
+Dim line2D2 As GeometricElement
+Set line2D2 = geometricElements1.Item("Line.2")
+
+selection7.Add line2D2
+
+Dim circle2D3 As GeometricElement
+Set circle2D3 = geometricElements1.Item("Circle.3")
+
+selection7.Add circle2D3
+
+Dim line2D3 As GeometricElement
+Set line2D3 = geometricElements1.Item("Line.3")
+
+selection7.Add line2D3
+
+Dim circle2D4 As GeometricElement
+Set circle2D4 = geometricElements1.Item("Circle.4")
+
+selection7.Add circle2D4
+
+Dim line2D4 As GeometricElement
+Set line2D4 = geometricElements1.Item("Line.4")
+
+selection7.Add line2D4
+
+Dim circle2D5 As GeometricElement
+Set circle2D5 = geometricElements1.Item("Circle.5")
+
+selection7.Add circle2D5
+
+Dim line2D5 As GeometricElement
+Set line2D5 = geometricElements1.Item("Line.5")
+
+selection7.Add line2D5
+
+Dim circle2D6 As GeometricElement
+Set circle2D6 = geometricElements1.Item("Circle.6")
+
+selection7.Add circle2D6
+
+Dim line2D6 As GeometricElement
+Set line2D6 = geometricElements1.Item("Line.6")
+
+selection7.Add line2D6
+
+selection7.Copy 
+
+drawingSheet2.Activate 
+
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Dim selection8 As Selection
+Set selection8 = drawingDocument1.Selection
+
+selection8.Paste 
+
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Dim selection9 As Selection
+Set selection9 = drawingDocument1.Selection
+
+selection9.Clear 
+
+selection9.Add drawingView3
+
+selection9.Paste 
+
+End Sub

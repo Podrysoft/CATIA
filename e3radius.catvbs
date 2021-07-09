@@ -1,0 +1,250 @@
+' radius of crv/edge/face/surface, (c) ema, lm:1.1.2009
+'
+Language="VBSCRIPT"
+Sub CATMain()
+' ******************************* variables *******************************************
+  Set objNetwork = CreateObject("Wscript.Network")
+  Set cad = CATIA.ActiveDocument
+  Set hb1 = cad.Part.InWorkObject
+  Set hsf = cad.Part.HybridShapeFactory
+  Set spa = cad.GetWorkbench("SPAWorkbench")
+  Set prt = cad.Part
+  Set vis = cad.Selection.VisProperties
+  del=1
+  msgboxtext="radius analysis"
+' ******************************* test if part is open ********************************
+  If CATIA.Documents.Count = 0 Then
+    MsgBox "There is no CATIA Part file open.  Open a Part file and run this script again.", ,msgboxtext
+    Exit Sub
+  End If
+  If InStr(CATIA.ActiveDocument.Name, ".CATPart") < 1 Then
+    MsgBox "Active CATIA Document is not a Part.  Open a Part file and run this script again.", ,msgboxtext
+    Exit Sub
+  End If
+' ******************************* show current geom.set *******************************
+  cad.Selection.Clear
+  cad.Selection.Add hb1
+  vis.SetShow 0
+' ******************************* check if geom.set is work object ********************
+  if(Typename(hb1)="HybridBody")then
+    hbwo=1
+    Set hb2 = cad.Part.InWorkObject
+  else
+    hbwo=0
+    Set hb2 = prt.HybridBodies.Add()
+    prt.Update
+  end if
+' ******************************* select curve/edge/face ******************************
+  cad.Selection.Clear
+  Dim InputObjectType(1)
+  InputObjectType(0)="Edge"
+'  InputObjectType(0)="BiDimFeatEdge"
+'  InputObjectType(1)="TriDimFeatEdge"
+'  InputObjectType(2) = "HybridShapeCurveExplicit"
+  InputObjectType(1) = "Face"
+  Status=cad.Selection.SelectElement2(InputObjectType,"Select an edge or face",true)
+  if (Status = "Cancel") then Exit Sub
+'  Set elm = cad.Selection.Item(1).Reference
+  Set elm = cad.Selection.Item(1).Value
+  if(cad.Selection.Item(1).Type="PlanarFace")then
+    msgbox "Planar face selected!", ,msgboxtext
+    Exit Sub
+  end if
+' msgbox cad.Selection.Item(1).Type  & vbCrLf & cad.Selection.count, ,msgboxtext
+' ******************************* create extract **************************************
+  set ext1 = hsf.AddNewExtract(elm)
+  ext1.PropagationType = 3
+  ext1.ComplementaryExtract = False
+  ext1.IsFederated = False
+  hb2.AppendHybridShape ext1
+  prt.Update
+' *************************************************************************************
+' ********************************** - F A C E - **************************************
+' *************************************************************************************
+if(cad.Selection.Item(1).Type="Face" or cad.Selection.Item(1).Type="CylindricalFace")then
+' ******************************* create boundary *************************************
+  set boundary = hsf.AddNewBoundaryOfSurface(ext1)
+  hb2.AppendHybridShape boundary
+' ******************************* create mid point ************************************
+  Set hybridShapeDirection1 = hsf.AddNewDirectionByCoord(0.0,1.0,0.0)
+  Set hybridShapeDirection2 = hsf.AddNewDirectionByCoord(1.0,1.0,0.0)
+'  Set axisSystems1 = prt.AxisSystems
+'msgbox axisSystems1.count, ,msgboxtext
+'  Set axisSystem1 = axisSystems1.Item("")
+'  Set reference1 = prt.CreateReferenceFromObject(axisSystem1)
+'  hybridShapeDirection1.RefAxisSystem = reference1
+'  hybridShapeDirection2.RefAxisSystem = reference1
+  Set ptX = hsf.AddNewPointOnSurface(ext1,hybridShapeDirection1,0.1)
+  hb2.AppendHybridShape ptX
+' ******************************* create offset ***************************************
+  set offset = hsf.AddNewCurvePar(boundary,ext1,0.100000,False,False)
+  offset.SmoothingType = 0
+  offset.MaximumDeviationValue = 0.000001
+  offset.p3DSmoothing = False
+  offset.PassingPoint = ptX
+  hb2.AppendHybridShape offset
+  On Error Resume Next
+  prt.update
+  if(Err.Number<>0)then
+    hsf.DeleteObjectForDatum offset
+    hsf.DeleteObjectForDatum ptX
+    Set ptX = hsf.AddNewPointOnSurface(ext1,hybridShapeDirection2,0.1)
+    hb2.AppendHybridShape ptX
+    set offset = hsf.AddNewCurvePar(boundary,ext1,0.100000,False,False)
+    offset.SmoothingType = 0
+    offset.MaximumDeviationValue = 0.000001
+    offset.p3DSmoothing = False
+    offset.PassingPoint = ptX
+    hb2.AppendHybridShape offset
+    On Error Resume Next
+    prt.update
+    if(Err.Number<>0)then
+      hsf.DeleteObjectForDatum offset
+      hsf.DeleteObjectForDatum ptX
+      hsf.DeleteObjectForDatum boundary
+      hsf.DeleteObjectForDatum ext1
+      msgbox "computation failed", ,msgboxtext
+      exit sub
+    end if
+  end if
+' ******************************* create normal plane *********************************
+  set plane1 = hsf.AddNewPlaneNormal(offset,ptX) 
+  hb2.AppendHybridShape plane1
+' ******************************* create normal line **********************************
+  set line = hsf.AddNewLineNormal(ext1,ptX,0.0,2.0,False)
+  hb2.AppendHybridShape line
+' ******************************* rotate plane1 ***************************************
+  set plane2 = hsf.AddNewPlaneAngle(plane1,line,90.0,False)
+  plane2.ProjectionMode = False
+  hb2.AppendHybridShape plane2 
+' ******************************* create intersection *********************************
+  set intersection1 = hsf.AddNewIntersection(ext1,plane1)
+  set intersection2 = hsf.AddNewIntersection(ext1,plane2)
+  intersection1.PointType = 0
+  intersection2.PointType = 0
+  hb2.AppendHybridShape intersection1
+  hb2.AppendHybridShape intersection2
+' ******************************* 2 points on curve ***********************************
+  Set pt1 = hsf.AddNewPointOnCurveFromPercent(intersection1,0.0,true)
+  Set pt2 = hsf.AddNewPointOnCurveFromPercent(intersection1,0.0,false)
+  Set pt3 = hsf.AddNewPointOnCurveFromPercent(intersection2,0.0,true)
+  Set pt4 = hsf.AddNewPointOnCurveFromPercent(intersection2,0.0,false)
+  hb2.AppendHybridShape pt1
+  hb2.AppendHybridShape pt2
+  hb2.AppendHybridShape pt3
+  hb2.AppendHybridShape pt4
+' ****************************** 1.circle through 3 points ****************************
+  rad1=0
+  Set circle1 = hsf.AddNewCircle3Points(pt1,ptX,pt2)
+  hb2.AppendHybridShape circle1
+  On Error Resume Next
+  prt.Update
+  if(Err.Number=0)then
+    Set M1 = spa.GetMeasurable(circle1)
+    rad1 = Round(M1.Radius, 2)
+    set CircleExp1 = hsf.AddNewCircleDatum(circle1)
+  else
+    hsf.DeleteObjectForDatum circle1
+    set circle1 = hsf.AddNewLinePtPt(pt3,pt4)
+    hb2.AppendHybridShape circle1
+    prt.Update
+    set CircleExp1 = hsf.AddNewLineDatum(circle1)
+  end if
+  hb2.AppendHybridShape CircleExp1
+  cad.Selection.Clear
+  cad.Selection.Add CircleExp1
+  vis.SetRealColor 0,0,255,1
+' ****************************** 2.circle through 3 points ****************************
+  rad2=0
+  Set circle2 = hsf.AddNewCircle3Points(pt3,ptX,pt4)
+  hb2.AppendHybridShape circle2
+  On Error Resume Next
+  prt.Update
+  if(Err.Number=0)then
+    Set M2 = spa.GetMeasurable(circle2)
+    rad2 = Round(M2.Radius, 2)
+    set CircleExp2 = hsf.AddNewCircleDatum(circle2)
+  else
+    hsf.DeleteObjectForDatum circle2
+    set circle2 = hsf.AddNewLinePtPt(pt3,pt4)
+    hb2.AppendHybridShape circle2
+    prt.Update
+    set CircleExp2 = hsf.AddNewLineDatum(circle2)
+  end if
+  hb2.AppendHybridShape CircleExp2
+  cad.Selection.Clear
+  cad.Selection.Add CircleExp2
+  vis.SetRealColor 0,255,0,1
+' ********************************** cleaning *****************************************
+  if(del=1)then
+    hsf.DeleteObjectForDatum circle1
+    hsf.DeleteObjectForDatum circle2
+    hsf.DeleteObjectForDatum pt1
+    hsf.DeleteObjectForDatum pt2
+    hsf.DeleteObjectForDatum pt3
+    hsf.DeleteObjectForDatum pt4
+    hsf.DeleteObjectForDatum intersection1
+    hsf.DeleteObjectForDatum intersection2
+    hsf.DeleteObjectForDatum line
+    hsf.DeleteObjectForDatum plane2
+    hsf.DeleteObjectForDatum plane1
+    hsf.DeleteObjectForDatum offset
+    hsf.DeleteObjectForDatum boundary
+    hsf.DeleteObjectForDatum ptX
+    hsf.DeleteObjectForDatum ext1
+  end if
+  cad.Selection.Clear
+  cad.Selection.Add elm
+  prt.Update
+    msgbox "blue: " & rad1 & vbCrLf & _
+           "green: " & rad2, ,msgboxtext
+  if(del=1)then 
+    hsf.DeleteObjectForDatum CircleExp1
+    hsf.DeleteObjectForDatum CircleExp2
+    if(hbwo=0)then
+      cad.Part.InWorkObject = hb1
+      cad.Selection.Clear
+      cad.Selection.Add hb2
+      cad.Selection.Delete
+      cad.Selection.Add elm
+    end if
+  end if
+else  
+' *************************************************************************************
+' ********************************** - C U R V E - ************************************
+' *************************************************************************************
+  Set pt1 = hsf.AddNewPointOnCurveFromPercent(ext1,0.0,true)
+  Set pt2 = hsf.AddNewPointOnCurveFromPercent(ext1,0.5,true)
+  Set pt3 = hsf.AddNewPointOnCurveFromPercent(ext1,0.0,false)
+  hb2.AppendHybridShape pt1
+  hb2.AppendHybridShape pt2
+  hb2.AppendHybridShape pt3
+  On Error Resume Next
+  set circle = hsf.AddNewCircle3Points(pt1,pt2,pt3)
+  hb2.AppendHybridShape circle
+  prt.Update    
+  Set M1 = spa.GetMeasurable(circle)
+  Set M2 = spa.GetMeasurable(elm)   
+  rad1 = Round(M1.Radius,2)
+  len1 = Round(M2.Length,2)
+  if(del=1)then
+    hsf.DeleteObjectForDatum circle
+    hsf.DeleteObjectForDatum pt1
+    hsf.DeleteObjectForDatum pt2
+    hsf.DeleteObjectForDatum pt3
+    hsf.DeleteObjectForDatum ext1
+    if(hbwo=0)then
+      cad.Part.InWorkObject = hb1
+      cad.Selection.Clear
+      cad.Selection.Add hb2
+      cad.Selection.Delete
+      cad.Selection.Add elm
+    end if
+  end if
+  If Err.Number <> 0 Then
+    msgbox "Radius infinite" & vbCrLf & "Length: " & len1, ,msgboxtext
+  Else
+    msgbox "Radius: " & rad1 & vbCrLf & "Length: " & len1, ,msgboxtext
+  End If
+end if
+End Sub

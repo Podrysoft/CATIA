@@ -1,0 +1,106 @@
+Sub Catmain()
+
+    Dim Fichero As String
+    Dim Cadena As String
+    Dim Posicion As Long
+    Dim Datos As String
+    Dim Versiontxt As String
+    Dim Releasetxt As String
+    Dim SerPack As String
+    Dim Mensaje As String
+    Dim RutaCompleta As String
+    Dim Ruta() As String
+    Dim Rutatxt As String
+    Dim VerActual As String
+    Dim SumaErrores As Integer
+
+'Obtener nombre de archivo activo
+    Set oProdDoc = CATIA.ActiveDocument
+    Fichero = oProdDoc.FullName
+	
+'Crear instancia Stream
+    Dim objStream
+    Set objStream = CreateObject("ADODB.Stream")
+
+'Abrir el stream
+    objStream.Open
+    objStream.Charset = "ascii"
+
+'Cargar en stream fichero del documento
+    objStream.LoadFromFile Fichero
+
+'Cargar a string cadena el stream
+    Cadena = objStream.ReadText
+
+'Buscar posicion donde se puede leer datos de version/release
+    Posicion = InStr(1, Cadena, "<Version>")
+
+'Si no se encuentran datos, terminar
+    If Posicion = 0 Then
+        MsgBox "No se puede encontrar la version del documento", vbInformation + vbOKOnly, "VERSION"
+    Else
+        'Separar datos de Version, Release y ServicePack en matriz Datos
+		Datos = Mid(Cadena,Posicion,150)
+		
+        'Extraer version
+		Versiontxt = Mid(Cadena, Posicion, InStr(1, Datos, "/")-1)
+        If Mid(Versiontxt, Len(Versiontxt) - 1, 1) = ">" Then
+            Versiontxt = Right(Versiontxt, 1)
+        Else
+            Versiontxt = Right(Versiontxt, 2)
+        End If
+
+        'Extraer Release
+		Posicion = InStr(1, Cadena, "<Release>")
+		Datos = Mid(Cadena,Posicion,150)
+		Releasetxt = Mid(Cadena, Posicion, InStr(1, Datos, "/")-1)
+        If Mid(Releasetxt, Len(Releasetxt) - 1, 1) = ">" Then
+            Releasetxt = Right(Releasetxt, 1)
+        Else
+            Releasetxt = Right(Releasetxt, 2)
+        End If
+
+        'Extraer Service Pack
+		Posicion = InStr(1, Cadena, "<ServicePack>")
+		Datos = Mid(Cadena,Posicion,150)
+		SerPack = Mid(Cadena, Posicion, InStr(1, Datos, "/")-1)
+        If Mid(SerPack, Len(SerPack) - 1, 1) = ">" Then
+            SerPack = Right(SerPack, 1)
+        Else
+            SerPack = Right(SerPack, 2)
+        End If
+       
+        If Len(oProdDoc.Name) > 40 Then
+            Mensaje = "Documento:      " & Left(oProdDoc.Name, 40) & "..." & vbCrLf
+        Else
+            Mensaje = "Documento:      " & oProdDoc.Name & vbCrLf
+        End If
+
+        Mensaje = Mensaje & "Versión doc.:     V" & Versiontxt & "R" & Releasetxt & "(SP" & SerPack & ")" & vbCrLf
+
+        VerActual = "Versión CATIA:   V" & CATIA.SystemConfiguration.Version & "R" & CATIA.SystemConfiguration.Release & "(SP" & CATIA.SystemConfiguration.ServicePack & ")"
+
+        Mensaje = Mensaje & VerActual
+
+        SumaErrores = 0
+
+        If CStr(Releasetxt) <> CStr(CATIA.SystemConfiguration.Release) Then
+            SumaErrores = SumaErrores + 1
+        End If
+
+        If CStr(SerPack) <> CStr(CATIA.SystemConfiguration.ServicePack) Then
+            SumaErrores = SumaErrores + 2
+        End If
+
+        Select Case SumaErrores
+            Case 1, 3 'Diferente revision
+                Mensaje = Mensaje & vbCrLf & vbCrLf & "ATENCION: Release diferente." & vbCrLf & "Si guardas el documento, " & "no se podrá abrir con la versión en que fue creado!!!"
+                MsgBox Mensaje, vbOKOnly + vbCritical, "VERSION"
+            Case 2 'Diferente ServicePack
+                Mensaje = Mensaje & vbCrLf & vbCrLf & "ATENCION: Service Pack es diferente."
+                MsgBox Mensaje, vbOKOnly + vbExclamation, "VERSION"
+            Case Else
+                MsgBox Mensaje, vbOKOnly + vbInformation, "VERSION"
+        End Select
+    End If
+End Sub

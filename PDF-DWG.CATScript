@@ -1,0 +1,45 @@
+Sub CATMain()
+
+Dim docDrawing As DrawingDocument
+Dim iDoc As Integer
+Dim folderinput As String
+Dim pathpdf As String
+Dim pathdwg As String
+Dim Num_Files, Conv As Long
+
+folderinput = InputBox("Ruta donde guardar los ficheros" & vbNewLine & "DWG & PDF","Conversion DWG/PDF",,vbInformation)
+
+If folderinput = "" then Exit Sub
+If Right(folderinput, 1) <> "\" Then folderinput=folderinput & "\"
+
+Num_Files = CATIA.Documents.Count
+Conv = 0
+
+For iDoc = 1 To Num_Files
+	If (TypeName(CATIA.Documents.Item(iDoc)) = "DrawingDocument") Then
+
+		Set docDrawing = CATIA.Documents.Item(iDoc)
+
+		docDrawing.Sheets.Item(1).Activate
+		Set window1 = CATIA.ActiveWindow
+		Set specsViewer1 = window1.ActiveViewer
+		specsViewer1.Reframe
+
+		Filename = Left(docDrawing.Name, Len(docDrawing.Name) - 11)
+
+		CATIA.StatusBar = "Convirtiendo (" & iDoc & "/" & Num_Files & ") - " & Filename
+
+		pathpdf = folderinput & Filename & ".pdf"
+		pathdwg = folderinput & Filename & ".dwg"
+			
+		docDrawing.ExportData pathpdf, "pdf"
+		docDrawing.ExportData pathdwg, "dwg"
+		
+		Conv = Conv + 1
+
+	End If
+Next
+
+MsgBox "Macro finalizada." & Chr(10) & "Ficheros convertidos : " & Conv, vbInformation
+
+End Sub

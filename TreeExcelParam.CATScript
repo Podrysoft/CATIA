@@ -1,0 +1,401 @@
+Option Explicit
+
+Dim a, b, Orden As Integer
+
+Dim Excel As Object
+Dim WorkBooks As WorkBooks
+Dim MyWorkBook As WorkBook
+
+Dim oDoc As Document
+Dim oProd As Product
+
+Dim partDocument1 As Document
+Dim oPart1 As Part
+
+Dim oPart As Part
+Dim oPartParams As Parameters
+Dim oProdParams As Parameters
+Dim oProdRelations As Relations
+Dim oPartRelations As Relations
+Dim oRootParamSet As ParameterSet
+Dim oParamSets As ParameterSets
+Dim oSubParamSet As ParameterSets
+Dim StrPartParam As Parameter
+Dim strPartParamVariant
+Dim strProdParamVariant
+Dim formula As Formula
+Dim oResponse As String
+Dim nParam, i As Integer
+
+Sub CATMain()
+
+	a = 2
+	b = 1
+
+	Orden = 1
+	
+	On Error Resume Next
+	
+	Set Excel = GetObject(, "EXCEL.Application")
+	If Err.Number <> 0 Then
+		Err.Clear
+		Set Excel = CreateObject("EXCEL.Application")
+	Else
+		Err.Clear
+		MsgBox "Cerrar Excel", vbCritical
+		Exit Sub
+	End If
+
+	On Error Goto 0
+
+	Set WorkBooks = Excel.Application.WorkBooks
+	Set MyWorkBook = Excel.WorkBooks.Add
+
+	'Excel.Visible = True
+	
+	Call Formato_Excel
+	
+	Set oDoc = CATIA.ActiveDocument
+	Set oProd = oDoc.Product
+	
+	
+	Dim oDoc As Document
+
+	Dim oPart As Part
+	Dim oProd As Product
+	Dim oPartParams As Parameters
+	Dim oProdParams As Parameters
+	Dim oProdRelations As Relations
+	Dim oPartRelations As Relations
+	Dim oRootParamSet As ParameterSet
+	Dim oParamSets As ParameterSets
+	Dim oSubParamSet As ParameterSets
+	Dim StrPartParam As Parameter
+	Dim strPartParamVariant
+	Dim strProdParamVariant
+	Dim formula As Formula
+	Dim oResponse As Variant
+	Dim nParam, i As Integer
+	Dim ValorP As Integer
+
+	Dim strType As String
+
+	Set oDoc = CATIA.ActiveDocument
+
+	'Get at the root parameters collection based on the type of document
+	strType = TypeName(CATIA.ActiveDocument)
+	If strType = "ProductDocument" Then
+	
+		Set oProdParams = CATIA.ActiveDocument.Product.Parameters
+		
+		'Set oRootParamSet = oProdParams.RootParameterSet
+		'Set oParamSets = oRootParamSet.ParameterSets
+		'MsgBox oParamSets.Count
+		
+		MsgBox "El documento es un Product y tiene " & oProdParams.Count & " parametros."
+		
+		ValorP = oProdParams.Count
+		
+		For nParam = 1 to ValorP
+			CATIA.StatusBar = nParam & " / " & ValorP & " ( " & FormatPercent((nParam/ValorP),2) & " )"
+			
+			If ValorOK(oProdParams.Item(nParam).Name) = True Then
+			
+				On Error Resume Next
+				
+				Excel.Cells(a,b) = oProdParams.Item(nParam).Name
+				Excel.Cells(a,b + 1) = oProdParams.Item(nParam).Value
+				a = a + 1
+				
+				On Error Goto 0
+				
+			End If
+		Next
+		
+	ElseIf strType = "PartDocument" Then
+	
+		Set oPart  = oDoc.Part
+		Set oPartParams = oPart.Parameters
+		Set oRootParamSet = oPartParams.RootParameterSet
+		Set oParamSets = oRootParamSet.ParameterSets
+
+		MsgBox oPartParams.Count
+		
+		ValorP = oPartParams.Count
+		
+		For nParam = 1 to ValorP
+			CATIA.StatusBar = nParam & " / " & ValorP & " ( " & FormatPercent((nParam/ValorP),2) & " )"
+			
+			If ValorOK(oPartParams.Item(nParam).Name) = True Then
+			
+				On Error Resume Next
+				
+				Excel.Cells(a,b) = oPartParams.Item(nParam).Name
+				Excel.Cells(a,b + 1) = oPartParams.Item(nParam).Value
+				a = a + 1
+				
+				On Error Goto 0
+				
+			End If
+			
+		Next
+		
+'		For nParam = 1 to oParamSets.Count
+'			Set oSubParamSet  = oParamSets.GetItem(oParamSets.Item(nParam).Name)
+'			Set StrPartParam  = oSubParamSet.DirectParameters
+'			For i = 1 to StrPartParam.Count
+'				'CATIA.StatusBar = nParam & " / " & ValorP & " ( " & FormatPercent((nParam/ValorP),2) & " )"
+'				'Excel.Cells(a,b) = oProdParams.Item(nParam).Name
+'				'Excel.Cells(a,b + 1) = oProdParams.Item(nParam).Value
+'				'a = a + 1
+'			
+'				MsgBox StrPartParam.Item(i).Name & " = " & StrPartParam.Item(i).Value
+'			Next
+'		Next
+
+	End If
+	
+	Excel.Visible = True
+	
+End Sub
+
+Function ValorOK(Parametro As String) As Boolean
+
+Dim ListaOK As String
+
+ListaOK = Array ("RELATIONS",_
+				"AXIS SYSTEM",_
+				"RPS",_
+				"ELEMENTOS DE TRABAJO",_
+				"ELEMENTOS_OUT",_
+				"SIN_MATERIAL",_
+				"EXTERNAL PARAMETERS",_
+				"AUXILIAR",_
+				"PIEZA EN BRUTO",_
+				"TIPOS DE MECANIZADOS",_
+				"MECANIZADO 1.6",_
+				"MECANIZADO 3.2",_
+				"MECANIZADOS 12.5",_
+				"TIPOS DE TALADRADO",_
+				"ROSCADOS",_
+				"PASADORES H7",_
+				"PASANTES Y REFUNDIDOS",_
+				"INERTIAVOLUME",_
+				"CONSTRAINTS",_
+				"PARTBODY",_
+				"PROPERTIES")
+
+	'ValorOK = (UBound (Filter (ListaOK, UCase (Parametro))) > -1)
+
+	ValorOK = True
+	If InStr(UCase(Parametro),"RELATIONS") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"AXIS SYSTEM") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"RPS") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"ELEMENTOS DE TRABAJO") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"ELEMENTOS_OUT") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"SIN_MATERIAL") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"EXTERNAL PARAMETERS") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"AUXILIAR") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"PIEZA EN BRUTO") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"TIPOS DE MECANIZADOS") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"MECANIZADO 1.6") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"MECANIZADO 3.2") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"MECANIZADOS 12.5") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"TIPOS DE TALADRADO") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"ROSCADOS") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"PASADORES H7") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"PASANTES Y REFUNDIDOS") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"INERTIAVOLUME") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"CONSTRAINTS") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"PARTBODY") <> 0 Then ValorOK = False
+	If InStr(UCase(Parametro),"PROPERTIES") <> 0 Then ValorOK = False
+
+End Function
+
+Sub asd()
+'	Param_Part(oDoc)
+	
+	Call Recorre_Arbol(oDoc)
+
+	MsgBox "Fin"
+	
+	Excel.Visible = True
+
+End Sub
+
+
+Sub Recorre_Arbol(oInProduct As Document)
+
+Dim oInstances As Products
+Dim oInst As Product
+Dim k As Integer
+
+Set oInstances = oInProduct.Products
+
+If (InStr(1,oInProduct.Name,"_T_") <> 11) And (InStr(1,oInProduct.Name,"_GEO") <> 11) And (InStr(1,oInProduct.Name,"_OUV") <> 11) Then
+b = 1
+Excel.Cells(a,b) = Orden
+b = b + 1
+
+If oInstances.Count = 0 Then
+
+	Excel.Cells(a,b) = "Part"
+	b = b + 1
+	Excel.Cells(a,b) = oInProduct.Name
+	
+	Param_Part(oInProduct)
+	
+'	Set oPartDoc = oInProduct 'CATIA.ActiveDocument
+'	Set oPart  = oPartDoc.Part
+'	Set oPartParams = oPartDoc.Parameters
+'	Set oRootParamSet = oPartParams.RootParameterSet
+'	Set oParamSets = oRootParamSet.ParameterSets
+'	
+'	For nParam = 1 to oParamSets.Count
+'		Set oSubParamSet  = oParamSets.GetItem(oParamSets.Item(nParam).Name)
+'		Set StrPartParam  = oSubParamSet.DirectParameters
+'		MsgBox StrPartParam.Count
+'		For i = 1 to StrPartParam.Count
+'			b = b + 1
+'			Excel.Cells(a,b) = StrPartParam.Item(i).Name & " = " & StrPartParam.Item(i).Value
+'			'MsgBox StrPartParam.Item(i).Name & " = " & StrPartParam.Item(i).Value
+'		Next
+'	Next
+	
+	
+	a = a + 1
+	Orden = Orden + 1
+Else
+
+	Excel.Cells(a,b) = "Product"
+	b = b + 1
+	Excel.Cells(a,b) = oInProduct.Name
+	a = a + 1
+	Orden = Orden + 1
+
+	For k = 1 to oInstances.Count
+		Set oInst = oInstances.Item(k)
+		Call Recorre_Arbol(oInst)
+	Next
+End If
+
+End If
+
+End Sub
+
+
+Sub Param_Part(NombrePart As Document)
+
+Dim oPart As Part
+Dim oPartParams As Parameters
+Dim oRootParamSet As ParameterSet
+Dim oParamSets As ParameterSets
+Dim oSubParamSet As ParameterSets
+Dim StrPartParam As Parameter
+Dim nParam As Integer
+
+
+MsgBox (NombrePart.Name)
+
+	Set oPart  = NombrePart.Part
+	Set oPartParams = oPart.Parameters
+	Set oRootParamSet = oPartParams.RootParameterSet
+	Set oParamSets = oRootParamSet.ParameterSets
+
+	MsgBox oPartParams.GetItem("RECAMBIO").Name & " = " & oPartParams.GetItem("RECAMBIO").Value
+	
+		For nParam = 1 to oParamSets.Count
+			Set oSubParamSet  = oParamSets.GetItem(oParamSets.Item(nParam).Name)
+			Set StrPartParam  = oSubParamSet.DirectParameters
+			
+			'MsgBox StrPartParam.Count
+			
+			For i = 1 to StrPartParam.Count
+				MsgBox StrPartParam.Item(i).Name & " = " & StrPartParam.Item(i).Value
+			Next
+		Next
+
+End Sub
+
+
+
+'WalkDownTree is a recursive function to scroll down the spec tree and output names of each item
+Sub WalkDownTree(oInProduct As Product)
+
+	CATIA.StatusBAR = a
+
+	Dim oInstances As Products
+	Set oInstances = oInProduct.Products
+
+	'-----No instances found then this is CATPart
+	If oInstances.Count = 0 Then
+		Msgbox "This is a CATPart with part number " & oInProduct.PartNumber
+		
+		Set oDoc = CATIA.Documents
+		Set PartDocument1 = oDoc.Item(oInProduct.PartNumber & ".CATPart")
+		Set oDoc1 = CATIA.ActiveDocument.Selection
+		Set oPart  = oDoc1.Part
+		Set oPartParams = oPart.Parameters
+		Set oRootParamSet = oPartParams.RootParameterSet
+		Set oParamSets = oRootParamSet.ParameterSets
+		
+		Excel.Cells(a,b) = oInProduct.PartNumber
+		
+		For nParam = 1 to oParamSets.Count
+			Set oSubParamSet  = oParamSets.GetItem(oParamSets.Item(nParam).Name)
+			Set StrPartParam  = oSubParamSet.DirectParameters
+			For i = 1 to StrPartParam.Count
+				b = b + 1
+				Excel.Cells(a,b) = StrPartParam.Item(i).Value
+				'MsgBox StrPartParam.Item(i).Name & " = " & StrPartParam.Item(i).Value
+			Next
+		Next
+		
+		'Excel.Cells(a,b) = oInProduct.PartNumber
+		'b = b + 1
+		'Excel.Cells(a,b) = oInProduct.PartNumber
+		a = a + 1
+		b = 1
+		
+'Set partDocument1 = CATIA.ActiveDocument
+'Set oPart1 = partDocument1.Part
+'Set parameters1 = oPart1.Parameters
+'Set parameterSet1 = parameters1.RootParameterSet
+'Set parameterSets1 = parameterSet1.ParameterSets
+'Set parameterSets2 = parameterSets1.GetItem("Base")
+'Set parameter=parameterSets2.AllParameters
+
+
+	Else
+
+	'-----Found an instance therefore it is a CATProduct
+	'Msgbox "This is a CATProduct with part number " & oInProduct.ReferenceProduct.PartNumber
+	b = 1
+	Excel.Cells(a,b) = oInProduct.ReferenceProduct.PartNumber
+	a = a + 1
+	Dim k As Integer
+	For k = 1 To oInstances.Count
+		Dim oInst As Product
+		Set oInst = oInstances.Item(k)
+		'apply design mode
+		oInstances.Item(k).ApplyWorkMode DESIGN_MODE
+		Call WalkDownTree(oInst)
+	Next
+End If
+
+End Sub
+
+
+Sub Formato_Excel()
+
+	Excel.Cells(1,1) = "Orden"
+	Excel.Cells(1,2) = "CATIA"
+	Excel.Cells(1,3) = "Instance"
+	Excel.Cells(1,4) = "RECAMBIO"
+	Excel.Cells(1,5) = "Orden"
+	Excel.Cells(1,6) = "Orden"
+	Excel.Cells(1,7) = "Orden"
+	Excel.Cells(1,8) = "Orden"
+	Excel.Cells(1,9) = "Orden"
+
+End Sub

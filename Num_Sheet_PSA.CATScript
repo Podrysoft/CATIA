@@ -1,0 +1,89 @@
+Option Explicit
+
+Dim oProd As Document
+Dim Shts As DrawingSheets
+Dim ActSht As DrawingSheet
+Dim BgVw As DrawingView
+Dim Text1, Text2 As DrawingText
+Dim Current_Sheet as Integer
+Dim Total_Sheet as Integer
+Dim x_pos1, y_pos1, x_pos2, y_pos2 as Integer
+
+
+Sub CATMain()
+
+	Dim oExt As String
+
+	'On Error Resume Next
+	'CATIA.DisplayFileAlerts = False
+	
+	Set oProd = CATIA.ActiveDocument
+	If Err.Number <> 0 Then
+		MsgBox "No tiene documento abierto!", vbInformation
+		Exit Sub
+	End If
+
+	oExt=LCase(Mid(oProd.Name,InStr(1,oProd.Name,".")+1,Len(oProd.Name)-InStr(1,oProd.Name,".")))
+
+	If oExt <> "catdrawing" then
+		MsgBox "Solo se puede cambiar el formato de un CATDrawing", vbInformation
+		Exit Sub
+	End If
+	
+	Dim parameters1 As Parameters
+	Set parameters1 = oProd.Parameters
+	Dim strParam1 As StrParam
+	Set strParam1 = parameters1.Item("Planche")
+	strParam1.Value = ""
+	
+	Set Shts = oProd.Sheets
+	Total_Sheet = Shts.Count
+	
+	strParam1.Value = Total_Sheet - 1 & "/" & Total_Sheet - 1
+	
+	Set ActSht = Shts.Item(1)
+	ActSht.Views.Item(2).Activate 'Background View
+		
+End Sub
+
+Sub A()
+	For Current_Sheet = 1 to Total_Sheet - 1
+
+		Set ActSht = Shts.Item(Current_Sheet)
+		Set BgVw = ActSht.Views.Item(2) 'Background View
+	
+		If ActSht.PaperSize="2" then
+			x_pos1 = 1145
+			y_pos1 = 50.5
+			x_pos2 = 1149
+			y_pos2 = 181
+		End If
+		If ActSht.PaperSize="3" then
+			x_pos1 = 797
+			y_pos1 = 50.5
+			x_pos2 = 798
+			y_pos2 = 176.5
+		End If
+		If ActSht.PaperSize="4" then
+			x_pos1 = 560
+			y_pos1 = 40.5
+			x_pos2 = 564
+			y_pos2 = 169
+		End If
+		If ActSht.PaperSize="5" then
+			x_pos1 = 386
+			y_pos1 = 40.5
+			x_pos2 = 389
+			y_pos2 = 163
+		End If
+	
+		Set Text1 = BgVw.Texts.Add(Current_Sheet & "/" & Total_Sheet - 1, x_pos1, y_pos1)
+		Text1.SetFontName 0, 0, "Arial (True Type)"
+		Text1.SetFontSize 0, 0, 5
+		
+		Set Text2 = BgVw.Texts.Add(Current_Sheet & "/" & Total_Sheet - 1, x_pos2, y_pos2)
+		Text2.SetFontName 0, 0, "Arial (True Type)"
+		Text2.SetFontSize 0, 0, 5
+	Next
+	
+End Sub

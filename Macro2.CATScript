@@ -1,0 +1,12 @@
+Option Explicit
+
+Sub CATMain()
+Dim iDoc As Integer
+
+Do While CATIA.Documents.Count > 1
+	CATIA.ActiveDocument.Close
+Loop
+
+	'MsgBox "macro ended."
+
+End Sub

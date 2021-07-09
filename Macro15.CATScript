@@ -1,0 +1,19 @@
+Sub CATMain()
+
+Dim sComando As String		'path completo del ejecutable con extension
+Dim sEjecut As String		' nombre del fichero con extension
+Dim X As Long				'devuelve una respuesta de la operación
+Dim Params() As Variant		' no se pa que sirve, pero lo necesita
+
+On Error Resume Next
+sEjecut = "SmartSort.exe"	'nombre del ejecutable o macro, incluida la extensión
+'If UCase(Trim(tLista(Num).Exten)) = "EXE" Then	'si la extensión es .exe
+   sComando = "C:\Users\128826\Desktop\Macros CATIA\" & sEjecut
+   X = CATIA.SystemService.ExecuteBackgroundProcessus(sComando)
+   msgbox X
+'Else   'si no es un exe, será un CATScript (no preparado para .catvba)
+'  X = CATIA.SystemService.ExecuteScript(Directorio,catScriptLibraryTypeDirectory, Macro.CATScript, "CATMain", Params)
+'End If
+On Error GoTo 0
+
+End Sub

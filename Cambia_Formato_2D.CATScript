@@ -1,0 +1,166 @@
+Option Explicit
+
+Dim oProd As Document
+Dim Formato As Sting
+Dim Nam As String
+
+Sub CATMain()
+
+	Dim oExt As String
+
+	On Error Resume Next
+	CATIA.DisplayFileAlerts = False
+	
+	Set oProd = CATIA.ActiveDocument
+	If Err.Number <> 0 Then
+		MsgBox "No tiene documento abierto!", vbInformation
+		Exit Sub
+	End If
+
+	oExt=LCase(Mid(oProd.Name,InStr(1,oProd.Name,".")+1,Len(oProd.Name)-InStr(1,oProd.Name,".")))
+
+	If oExt <> "catdrawing" then
+		MsgBox "Solo se puede cambiar el formato de un CATDrawing", vbInformation
+		Exit Sub
+	End If
+
+	Formato = InputBox("Indicar Formato de Plano, A0 A1 A2 A3","Formato Plano")
+	Formato = UCase(Formato)
+
+	If (Formato = "A3" Or Formato = "A2" Or Formato = "A1" Or Formato = "A0") Then
+		Ini2D
+	Else
+		MsgBox "Formato Incorrecto " & Formato, vbInformation
+	End If
+
+	On Error Goto 0
+	CATIA.DisplayFileAlerts = True
+
+End Sub
+
+
+Sub Ini2D
+
+	Dim Shts As DrawingSheets
+	Dim ActSht As DrawingSheet
+	Dim BgVw As DrawingView
+	Dim InstanceComponent As DrawingComponent
+	Dim Caj_x_Pos, Caj_y_Pos As Double
+	Dim Sol_x_Pos, Sol_y_Pos As Double
+	Dim vFor As DrawingView
+	Dim dPos As Integer
+
+	Set Shts = oProd.Sheets
+	Set ActSht = Shts.ActiveSheet
+	Set BgVw = ActSht.Views.Item(2) 'Background View
+
+	Select Case Formato
+		Case "A3" : 	ActSht.PaperSize = catPaperA3
+						ActSht.Orientation = catPaperLandscape
+						'Posicion Cajetin
+						Caj_x_Pos = 410
+						Caj_y_Pos = 10
+						'Posicion Material en Bruto
+						Sol_x_Pos = 410
+						Sol_y_Pos = 287
+						
+		Case "A2" : 	ActSht.PaperSize = catPaperA2
+						ActSht.Orientation = catPaperLandscape
+						'Posicion Cajetin
+						Caj_x_Pos = 584
+						Caj_y_Pos = 10
+						'Posicion Material en Bruto
+						Sol_x_Pos = 584
+						Sol_y_Pos = 410
+						
+		Case "A1" : 	ActSht.PaperSize = catPaperA1
+						ActSht.Orientation = catPaperLandscape
+						'Posicion Cajetin
+						Caj_x_Pos = 831
+						Caj_y_Pos = 10
+						'Posicion Material en Bruto
+						Sol_x_Pos = 831
+						Sol_y_Pos = 584
+						
+		Case "A0" : 	ActSht.PaperSize = catPaperA0
+						ActSht.Orientation = catPaperLandscape
+						'Posicion Cajetin
+						Caj_x_Pos = 1179
+						Caj_y_Pos = 10
+						'Posicion Material en Bruto
+						Sol_x_Pos = 1179
+						Sol_y_Pos = 831
+						
+	End Select
+	
+	'Cambio de Marco
+	dPos = BusDitRef(BgVw, "RUGOSIDAD")
+	dPos = 1
+	
+	If dPos <> 0 Then 
+		BgVw.Components.Remove (dPos)
+		Set vFor = oProd.Sheets.Item("DETALLES").Views.Item("DIN-" & Formato)
+		Set InstanceComponent = BgVw.Components.Add (vFor, 0, 0)
+	End If
+	
+	'Cambio de Cajetin
+	dPos = BusDitRef(BgVw, "CAJETIN")
+	If dPos <> 0 Then
+		BgVw.Components.Remove (dPos)
+		Set vFor = oProd.Sheets.Item("DETAIL").Views.Item("CAJETIN")
+		Set InstanceComponent = BgVw.Components.Add (vFor, Caj_x_Pos, Caj_y_Pos)
+	End If
+	
+	'Tabla Soldadura
+	dPos = BusDitRef(BgVw, "SOLD_BRUTO")
+	If dPos <> 0 Then 
+		BgVw.Components.Remove (dPos)
+		Set vFor = oProd.Sheets.Item("DETAIL").Views.Item("SOLD_BRUTO")
+		Set InstanceComponent = BgVw.Components.Add (vFor, Sol_x_Pos, Sol_y_Pos)
+	End If
+	
+End Sub 'Ini2D
+
+
+Function BusDitRef(Vw As DrawingView, Ininam As String) As Integer
+
+	Dim Dits As DrawingComponents
+	Dim Dit As DrawingComponent
+	Dim Ref As DrawingView
+	Dim i As Integer
+
+	BusDitRef = 0
+	Nam = ""
+	
+	' Buscar Ditto
+	Set Dits = Vw.Components
+
+	For i = 1 To Dits.Count
+		Set Dit = Dits.Item(i)
+		Set Ref = Dit.CompRef
+		Nam = GetVuNam (Ref)		
+		If InStr(1,Nam,Ininam,vbTextCompare)<>0 Then
+			BusDitRef = i
+			Exit For
+		End If
+	Next
+
+End Function 'BusDitRef
+
+
+Function GetVuNam(Vue As DrawingView) As String
+
+	GetVuNam = ""
+
+	If Left(Vue.Name, 9) = "DrwDetail" Then
+		Set mv = Vue.GetItem("ModelElement")
+		Nam = mv.DisplayName
+	Else
+		Nam = Vue.Name
+	End If
+
+	GetVuNam = Nam
+
+End Function 'GetVuNam
+
+

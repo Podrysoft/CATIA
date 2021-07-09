@@ -1,0 +1,78 @@
+Language="VBSCRIPT"
+
+Sub CATMain()
+
+Dim partDocument1 As Document
+Set partDocument1 = CATIA.ActiveDocument
+
+Dim selection1 As Selection
+Set selection1 = partDocument1.Selection
+
+Dim visPropertySet1 As VisPropertySet
+Set visPropertySet1 = selection1.VisProperties
+
+Dim part1 As Part
+Set part1 = partDocument1.Part
+
+Dim bodies1 As Bodies
+Set bodies1 = part1.Bodies
+
+Dim body1 As Body
+Set body1 = bodies1.Item("Boundingbox.10")
+
+Set bodies1 = body1.Parent
+
+Dim bSTR1 As String
+bSTR1 = body1.Name
+
+selection1.Add body1
+
+Set visPropertySet1 = visPropertySet1.Parent
+
+Dim bSTR2 As String
+bSTR2 = visPropertySet1.Name
+
+Dim bSTR3 As String
+bSTR3 = visPropertySet1.Name
+
+visPropertySet1.SetShow 1
+
+selection1.Clear 
+
+Dim selection2 As Selection
+Set selection2 = partDocument1.Selection
+
+Dim visPropertySet2 As VisPropertySet
+Set visPropertySet2 = selection2.VisProperties
+
+Set bodies1 = body1.Parent
+
+Dim bSTR4 As String
+bSTR4 = body1.Name
+
+selection2.Add body1
+
+Set visPropertySet2 = visPropertySet2.Parent
+
+Dim bSTR5 As String
+bSTR5 = visPropertySet2.Name
+
+Dim bSTR6 As String
+bSTR6 = visPropertySet2.Name
+
+visPropertySet2.SetShow 0
+
+selection2.Clear 
+
+Set partDocument1 = CATIA.ActiveDocument
+
+Dim selection3 As Selection
+Set selection3 = partDocument1.Selection
+
+selection3.Clear 
+
+selection3.Add body1
+
+selection3.Delete 
+
+End Sub

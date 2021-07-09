@@ -1,0 +1,26 @@
+'Ocultar Sistema de Ejes de la vista del Drawing
+'por : David Rodriguez
+'fecha : 14/01/2020
+
+Option Explicit
+
+Sub CATMain()
+
+Dim oDoc As Document
+Dim Selection1 As Selection
+Dim visPropertySet1 As VisPropertySet
+
+Set oDoc = CATIA.ActiveDocument
+
+If (TypeName(oDoc) = "DrawingDocument") Then
+
+	Set Selection1 = oDoc.Selection
+	Selection1.Clear
+	Selection1.Search "(CATSketchSearch.2DAxis_HDirection + CATSketchSearch.2DAxis_VDirection + CATSketchSearch.2DAxis_Origin),all"
+	Set visPropertySet1 = Selection1.VisProperties
+	visPropertySet1.SetShow 1
+	Selection1.Clear
+	
+End If
+
+End Sub

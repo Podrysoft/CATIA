@@ -1,0 +1,75 @@
+Sub CATMain()
+
+Dim Padre As Selection
+Dim Hijos As Selection
+Dim i As Integer
+Dim j As Integer
+Dim nhijos As Integer
+Dim nordenados As Integer
+Dim oSelection As Selection
+Dim minimoP As Product
+Dim padreP As Product
+
+Set oSelection = CATIA.ActiveDocument.Selection
+
+'----Me aseguro de que el componente está seleccionado
+If oSelection.Count < 1 Then
+MsgBox ("Debe estar seleccionado el componente debajo del cual están los parts a reordenar")
+End If
+
+set Padre= CATIA.ActiveDocument.Selection
+set padreP = Padre.Item(1).Value
+'MsgBox padreP.Name
+Padre.Search "CATAsmSearch.Part,in"
+set Hijos = CATIA.ActiveDocument.Selection
+nHijos =Hijos.Count
+
+nordenados = 0
+
+'---Comparo el elemento i con el ultimo elemento
+
+For i=1 to nHijos
+	Padre.Search "CATAsmSearch.Part,in"
+	set Hijos = CATIA.ActiveDocument.Selection
+
+	Set minimoP = Hijos.Item(1).Value
+	'MsgBox ("i= " &i)
+
+	For j=2 to (nHijos - nordenados)
+		if Hijos.Item(j).Value.Name <= minimoP.Name Then 
+			Set minimoP= Hijos.Item(j).Value
+		End If
+	Next
+	'MsgBox  ("El minimo es: " &  minimoP.Name)
+	nordenados = nordenados + 1
+	oSelection.Clear
+    	oSelection.Add minimoP
+'-----recojo el nombre antes de cortar el elemento
+	nombreOri=minimoP.Name
+'-----------
+    	oSelection.Cut  
+	oSelection.Clear          
+    	oSelection.Add padreP
+     oSelection.Paste
+
+'---------------seleccion del elemento copiado
+	Dim oSelection2 As Selection
+	Set oSelection2 = CATIA.ActiveDocument.Selection
+	Set oCopiedProduct = oSelection2.Item(1).Value 
+ 	
+'---------------------------
+
+'------Renombrado Instancia
+	Set ItemToRename = oSelection2.Item(1).Value 
+	Dim Padre2 as Product
+	Set Padre2 =oCopiedProduct.Parent.Parent.ReferenceProduct
+	Nombre =oCopiedProduct.Name
+	Dim product7 As Product
+	Set product7 = Padre2.Products.Item(Nombre)
+	product7.Name = nombreOri
+'Renombrado Instancia-------------
+
+Next
+
+
+End Sub

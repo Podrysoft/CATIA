@@ -1,0 +1,86 @@
+Option Explicit
+
+Dim oDoc As Document
+Dim oPart As Part
+Dim oProd As Product
+Dim oPartParams As Parameters
+Dim oProdParams As Parameters
+Dim oProdRelations As Relations
+Dim oPartRelations As Relations
+Dim oRootParamSet As ParameterSet
+Dim oParamSets As ParameterSets
+Dim oSubParamSet As ParameterSets
+Dim StrPartParam As Parameter
+Dim strPartParamVariant
+Dim strProdParamVariant
+Dim formula As Formula
+Dim oResponse As String
+Dim nParam, i As Integer
+
+Sub CATMain()
+
+	Dim strType As String
+	
+	Set oDoc = CATIA.ActiveDocument
+		
+	'Get at the root parameters collection based on the type of document
+	strType = TypeName(CATIA.ActiveDocument)
+	If strType = "ProductDocument" Then
+	
+		Set oProdParams = CATIA.ActiveDocument.Product.Parameters
+		
+		Set oRootParamSet = oProdParams.RootParameterSet
+		Set oParamSets = oRootParamSet.ParameterSets
+		MsgBox oParamSets.Count
+		
+		MsgBox "El documento es un Product y tiene " & oProdParams.Count & " parametros."
+		MsgBox oProdParams.Item(1).Name
+		
+	ElseIf strType = "PartDocument" Then
+	
+		Set oPart  = oDoc.Part
+		Set oPartParams = oPart.Parameters
+		Set oRootParamSet = oPartParams.RootParameterSet
+		Set oParamSets = oRootParamSet.ParameterSets
+
+		For nParam = 1 to oParamSets.Count
+			Set oSubParamSet  = oParamSets.GetItem(oParamSets.Item(nParam).Name)
+			Set StrPartParam  = oSubParamSet.DirectParameters
+			MsgBox StrPartParam.Count
+			For i = 1 to StrPartParam.Count
+				MsgBox StrPartParam.Item(i).Name & " = " & StrPartParam.Item(i).Value
+			Next
+		Next
+
+	End If
+
+
+
+End Sub
+
+
+
+Sub a()
+Dim catDoc As PartDocument
+Dim catPart As Part
+
+Set catDoc=CATIA.ActiveDocument
+Set catPart=catDoc.Part
+
+Set objParameters = catPart.Parameters
+
+MsgBox objParameters.Count
+
+i=1
+
+    ' Loop on parameters to retrieve them
+'For i = 1 To objParameters.Count
+        Set objParameter = objParameters.Item(i)
+        strParmName = objParameter.Name
+        strParmValue = objParameter.ValueAsString
+       
+MsgBox strParmName & " = " & strParmValue
+
+'Next
+
+End Sub

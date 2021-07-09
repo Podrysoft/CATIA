@@ -1,0 +1,83 @@
+Sub CATMain()
+
+    Dim CATIA, doc, prod, sel
+    
+    Set CATIA = GetObject(, "CATIA.Application")    ' get CATIA Application
+    Set doc = CATIA.ActiveDocument
+    Set prod = doc.Product
+    Set sel = doc.Selection
+    
+    ' select top product in a CATIA tree
+    sel.Clear
+    sel.Add prod
+    
+    ' launch "Graph tree reordering" command
+    CATIA.StartCommand "Graph tree reordering"
+    
+    Dim winAutomation As CUIAutomation
+    Set winAutomation = New CUIAutomation
+    
+    Dim desktop As IUIAutomationElement
+    ' get reference to the root element (desktop)
+    Set desktop = winAutomation.GetRootElement
+    
+    Dim allWindowsCond As IUIAutomationCondition
+    ' retrieves a predefined condition that selects all elements
+    Set allWindowsCond = winAutomation.CreateTrueCondition
+    
+    Dim childs As IUIAutomationElementArray
+    ' find all elements & put them into element array
+    Set childs = desktop.FindAll(TreeScope_Children, allWindowsCond)
+    
+    Dim i As Long, currChild As IUIAutomationElement
+    Dim catiaWindow As IUIAutomationElement
+    
+    ' loop through all element and find CATIA by window name which contains "CATIA V5" string
+    For i = 0 To childs.Length - 1
+        Set currChild = childs.GetElement(i)
+        
+        If InStr(currChild.CurrentName, "CATIA V5") Then
+            Set catiaWindow = currChild ' set main catia window
+        End If
+        
+        'Debug.Print currChild.CurrentName, currChild.CurrentClassName
+    Next
+    
+    Dim graphWinCond As IUIAutomationCondition
+    Set graphWinCond = winAutomation.CreatePropertyCondition(UIA_NamePropertyId, "Graph tree reordering")
+    
+    Dim graphWin As IUIAutomationElement
+    
+    'wait for Graph window to open and get it
+    Do
+        Set graphWin = catiaWindow.FindFirst(TreeScope_Children, graphWinCond)
+        
+        ' do not freeze application in case of infinite loop
+        DoEvents
+    Loop While graphWin Is Nothing
+    
+    ' get OK button
+    Dim btnOKCondition As IUIAutomationCondition, btnOk As IUIAutomationElement
+    
+    Set btnOKCondition = winAutomation.CreatePropertyCondition(UIA_NamePropertyId, "OK")
+    Set btnOk = graphWin.FindFirst(TreeScope_Children, btnOKCondition)
+    
+    ' get Move Down button
+    Dim btnMoveDownCondition As IUIAutomationCondition, btnMoveDown As IUIAutomationElement
+
+    Set btnMoveDownCondition = winAutomation.CreatePropertyCondition(UIA_NamePropertyId, "Move Down")
+    Set btnMoveDown = graphWin.FindFirst(TreeScope_Descendants, btnMoveDownCondition)
+    
+    ' control pattern definition (button click)
+    Dim patMoveDown As IUIAutomationInvokePattern, patOK As IUIAutomationInvokePattern
+    
+    Set patMoveDown = btnMoveDown.GetCurrentPattern(UIA_InvokePatternId)
+    Set patOK = btnOk.GetCurrentPattern(UIA_InvokePatternId)
+    
+    For i = 1 To prod.Products.Count - 1
+        ' button click events invoked
+        patMoveDown.Invoke
+    Next
+
+    patOK.Invoke
+End Sub

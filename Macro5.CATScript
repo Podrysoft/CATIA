@@ -1,0 +1,63 @@
+Sub CATMain()
+ 
+     Dim objPart As Part
+     Dim objParamSetRoot As ParameterSet
+     Dim objParamSet As ParameterSet
+     Dim objParams As Parameters
+     Dim objParam As Parameter
+     Dim intCount As Integer
+     Dim intIndex As Integer
+     Dim strName As String
+     Dim strMsg As String
+ 
+     'Get at the part object
+     Set objPart = CATIA.ActiveDocument.Part
+ 
+     'Get at all parameters in the part...
+     'This collection could be very large in some cases and therefore slow
+     'Could also be hard to get at a specific Radius parameter
+     'since .Item("Radius") will always return only the first one found
+ 
+     Set objParams = objPart.Parameters
+     intCount = 0
+     For intIndex = 1 To objParams.Count
+          If objParams.Item(intIndex).Name = "Radius" Then
+               intCount = intCount + 1
+          End If
+     Next
+     strMsg = "This part has " &objParams.Count & " total parameters" & vbCrLf
+     strMsg = strMsg & "and has " & intCount & " parameters named ""Radius"""
+     MsgBox strMsg, 0, "Test1"
+ 
+     'Now get at the root parameter set and check its direct parameters
+     'There will be none in this example because the root parameter set
+     'only has other parameter sets below it but no parameters
+ 
+     Set objParamSet = objParams.RootParameterSet
+     intCount = objParamSet.DirectParameters.Count
+     MsgBox "The root parameter set has " & intCount _
+             & " parameters directly under it.", 0, "Test2"
+ 
+     'Get at the root parameter set and retrieve all its parameters
+     'There will be seven in this example
+     'For this we will use the AllParameters method.
+     'Note that IF we were sure there was ONLY ONE Radius Parameter
+     'somewhere under this set, we could get it from this parameters collection
+     'by using the .Item method
+ 
+     Set objParamSet = objParams.RootParameterSet
+     intCount = objParamSet.AllParameters.Count
+     MsgBox "The root parameter set has " & intCount _
+                     & " parameters under it (all levels).", 0, "Test3"
+ 
+     'Get at just the Radius parameter in the "Holes" parameter set
+     'For this we access a specific ParameterSet object and get its
+     'DirectParameters
+     Set objParamSet = objParams.RootParameterSet.ParameterSets.Item("Holes")
+     Set objParam = objParamSet.DirectParameters.Item("Radius")
+     strName = objParams.GetNameToUseInRelation(objParam)
+     strMsg = "The full name of the radius param in the Holes param set is,"
+     strMsg = strMsg & vbCrLf & strName
+     MsgBox strMsg, 0, "Test4"
+ 
+End Sub

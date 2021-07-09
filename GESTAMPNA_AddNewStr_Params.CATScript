@@ -1,0 +1,113 @@
+Language="VBSCRIPT"
+
+Sub CATMain()
+
+CATIA.DisplayFileAlerts = False
+
+Dim oPartDoc As Document
+Dim oProdDoc As Document
+Dim oPart As Part
+Dim oProd As Product
+Dim oPartParams As Parameters
+Dim oProdParams As Parameters
+Dim oProdRelations As Relations
+Dim oPartRelations As Relations
+Dim oRootParamSet As ParameterSet
+Dim oParamSets As ParameterSets
+Dim oSubParamSet As ParameterSets
+Dim StrPartParam As Parameter
+Dim strPartParamVariant
+Dim strProdParamVariant
+Dim formula As Formula
+Dim oResponse As String
+
+'********************************************************************************************************************************************	
+'********************************************************************************************************************************************	
+'********************************************************************************************************************************************	
+
+If UCase(Right(CATIA.ActiveDocument.Name,7))="CATPART" Then
+
+	Set oPartDoc = CATIA.ActiveDocument
+	Set oPart  = oPartDoc.Part
+	Set oPartRelations = oPart.Relations
+	Set oPartParams = oPart.Parameters
+	Set oRootParamSet = oPartParams.RootParameterSet
+	Set oParamSets = oRootParamSet.ParameterSets
+	Set oSubParamSet  = oParamSets.GetItem("MATERIAL , DIMESIONES, TRATAMIENTOS")
+
+	On error Resume Next
+	Set StrPartParam  = oSubParamSet.DirectParameters.Item("PROTECCION")
+	If Err.Number <> 0 Then
+		Err.Clear
+		Set StrPartParam  = oSubParamSet.DirectParameters.Item("ACABADO")
+	End If
+
+	'Multi value
+	Dim MultiPartValue02(6) As Object
+	MultiPartValue02(0) = "---"
+	MultiPartValue02(1) = "PAVONADO / BLACK OXIDE"
+	MultiPartValue02(2) = "SAFETY YELLOW SW4084 / RAL 1003"
+	MultiPartValue02(3) = "SAFETY ORANGE SW4083 / RAL 2000"
+	MultiPartValue02(4) = "SAFETY RED SW4081 / RAL 3020"
+	MultiPartValue02(5) = "PURE WHITE SW4089 / RAL 9010"
+	MultiPartValue02(6) = "SEE NOTE / VER NOTA"
+	set strPartParamVariant = StrPartParam
+	strPartParamVariant.SetEnumerateValues(MultiPartValue02)
+	StrPartParam.Value = "---"
+
+	Set StrPartParam  = oSubParamSet.DirectParameters.Item("TIPO_FABRICACION")
+	Dim MultiPartValue01(3) As Object
+	MultiPartValue01(0) = "---"
+	MultiPartValue01(1) = "OXI / TEMPLATE"
+	MultiPartValue01(2) = "OXI & CAM / TEMPLATE & CAM"
+	MultiPartValue01(3) = "CALIBRADO / CALIBRATED"
+	set strPartParamVariant = StrPartParam
+	strPartParamVariant.SetEnumerateValues(MultiPartValue01)
+	StrPartParam.Value = "---"
+
+	Set StrPartParam  = oSubParamSet.DirectParameters.Item("TRATAMIENTO")
+	Dim MultiPartValue03(3) As Object
+	MultiPartValue03(0) = "---"
+	MultiPartValue03(1) = "ESTABILIZAR ANTES DE MECANIZAR/STABILIZE BEFORE MACHINING"
+	MultiPartValue03(2) = "BONIFICADO 800Nmm²/HEAT-TREATED 800Nmm²"
+	MultiPartValue03(3) = "NITRURADO/NITRIDE"
+	set strPartParamVariant = StrPartParam
+	strPartParamVariant.SetEnumerateValues(MultiPartValue03)
+	StrPartParam.Value = "---"
+
+	Set StrPartParam  = oSubParamSet.DirectParameters.Item("MATERIAL")
+	Set formula = oPartRelations.CreateFormula("SERRA_MATERIAL", "", StrPartParam, "Material ")
+	formula.Hidden = True
+
+'********************************************************************************************************************************************	
+'********************************************************************************************************************************************	
+'********************************************************************************************************************************************
+	
+ElseIf UCase(Right(CATIA.ActiveDocument.Name,10))="CATPRODUCT" Then
+
+	Set oProdDoc = CATIA.ActiveDocument
+	Set oProd = oProdDoc.Product
+	Set oProdRelations = oProd.Relations
+	Set oProdParams = oProd.Parameters
+	
+	On Error Resume Next
+	oProdRelations.Remove("SERRA_MATERIAL")
+	
+	Set StrProdParam = oProdParams.Item("DENOMINACION")
+	Dim arrayOfVariantOfBSTR1(1)
+	arrayOfVariantOfBSTR1(0) = "CJTO. SOLDADO / WELDING ASSEMBLY"
+	arrayOfVariantOfBSTR1(1) = "PANEL PROTECCION / PROTECTIVE PANEL"
+	set strProdParamVariant = StrProdParam
+	strProdParamVariant.SetEnumerateValues (arrayOfVariantOfBSTR1)
+	StrProdParam.Value = "CJTO. SOLDADO / WELDING ASSEMBLY"
+	
+	
+	Set StrProdParam = oProdParams.Item("MATERIAL")
+	Set formula = oProdRelations.CreateFormula("SERRA_MATERIAL", "", StrProdParam, "Material ")
+	formula.Hidden = True
+	
+End If
+
+CATIA.StatusBar = "*******************     Parametros Actualizados!     *******************"
+
+End Sub

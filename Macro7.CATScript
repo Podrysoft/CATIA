@@ -1,0 +1,40 @@
+Sub CATMain()
+
+'ModelPath = CATIA.FileSelectionBox("Sélectionner un fichier", "*.CATPart", CatFileSelectionModeOpen)
+ModelPath = SelectFolder( "" )
+
+Dim File, Folder, FileCollection
+Dim fso, ff As Object
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set ff = CreateObject("Shell.Application").BrowseForFolder(0, "Please select a folder", 0, "")
+
+Dim tmpStr, strLine As String
+If Not ff Is Nothing Then
+GetFolder = ff.Items.Item.Path
+Else
+GetFolder = vbNullString
+End If
+
+If GetFolder = "" Then 
+Exit Sub 
+End If 
+
+Set Folder = fso.GetFolder(GetFolder)
+
+End Sub
+
+Sub a()
+As Document Dim drawingDocument1
+September drawingDocument1 = CATIA.ActiveDocument
+
+Dim drawingSheets1 As DrawingSheets
+Set drawingSheets1 = drawingDocument1.Sheets
+
+Dim drawingSheet1 As DrawingSheet
+Set drawingSheet1 = drawingSheets1.ActiveSheet
+
+drawingDocument1.ExportData Folder & "\" & Left ( CATIA.ActiveDocument.Name , Len ( CATIA.ActiveDocument.Name ) - 11), "pdf"
+
+MsgBox "PDF has-been created", 64, "Save As PDF"
+
+End Sub

@@ -1,0 +1,18 @@
+Language="VBSCRIPT"
+
+Sub CATMain()
+
+Dim drawingDocument1 As Document
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Dim selection1 As Selection
+Set selection1 = drawingDocument1.Selection
+
+selection1.Search "(CATSketchSearch.2DAxis_HDirection + CATSketchSearch.2DAxis_VDirection),all"
+
+Dim selection2 As Selection
+Set selection2 = drawingDocument1.Selection
+
+selection2.Search "Type=*,all"
+
+End Sub

@@ -1,0 +1,201 @@
+' COPYRIGHT Dassault Systèmes 2004
+'===========================================
+' Macro to scan a root product to select
+' all Assembly Constraints that have unresolved references
+'
+' Prerequisite: - open the CATProduct in DESIGN MODE
+'               - or specify in the environment variable 'InputFileName' the path
+'                 of the CATProduct to scan and deactivate the Cache option
+'
+' Use case: simple detection of Constraints to be deleted before an import to ENOVIA
+'
+' additional options :
+'   - valuate the environment variable 'DumpFileName' with 
+'     the path of a .txt file to generate traces
+'   - export DetectAll=YES to detect all broken constraints
+'     (not only those who lost their Elements)
+'===========================================
+
+' global variables
+' ----------------
+
+Private mySelection
+Private DetectAll
+
+
+'=================================================
+Sub CATMain()
+
+		' environment variables
+		'----------------------
+
+		Dim DocFileName
+		DocFileName = CATIA.SystemService.Environ("InputFileName")
+
+		Dim OutputFileName
+		OutputFileName = CATIA.SystemService.Environ("DumpFileName")
+
+		DetectAll = CATIA.SystemService.Environ("DetectAll")
+
+		' Open $DocFileName or get the active document
+		' --------------------------------------------
+
+		Dim productDocument
+		If DocFileName <> "" Then
+				Set documents = CATIA.Documents
+				Set productDocument = documents.Open(DocFileName)
+		Else
+				Set productDocument = CATIA.ActiveDocument
+		End If
+
+		' Get the Selection object
+		' ------------------------
+
+		Set mySelection = productDocument.Selection
+		
+		' Clear the Selection object
+		' --------------------------
+		
+		mySelection.Clear
+
+		' Open the Output file if it is specified
+		' ---------------------------------------
+
+		Dim outputFile
+		if OutputFileName <> "" Then
+				Set fileSystem = CATIA.FileSystem
+				Set outputFile = fileSystem.CreateFile(OutputFileName, True)
+				Set textStream = outputFile.OpenAsTextStream("ForWriting")
+		End If
+
+		' Get the root Product
+		' --------------------
+
+		Set RootProduct = productDocument.Product
+
+		if OutputFileName <> "" Then
+				textStream.Write("Processing " & RootProduct.Name & Chr(10))
+		Else
+				MsgBox "Processing " & RootProduct.Name, , "Select broken constraints"
+		End If 
+
+		' Launch the broken constraints selection
+		' ---------------------------------------
+
+		SelectConstraints RootProduct
+
+		' Result processing
+		' -----------------
+
+		if OutputFileName <> "" Then
+				textStream.Write("There are " & mySelection.Count & " broken constraints" & Chr(10))
+				For I = 1 To mySelection.Count
+						Set curConstraint = mySelection.Item(I).Value
+						textStream.Write("Broken constraint [" & I & "] = " & curConstraint.Name _
+						 & " in " & curConstraint.Parent.Parent.Name & Chr(10) )
+				Next
+				textStream.Close
+		Else
+				MsgBox "There are " & mySelection.Count & " broken constraints", , "Select broken constraints"
+		End If 
+
+End Sub
+
+'=================================================
+Private Sub SelectConstraints(oCurrentProduct)
+
+		' don't stop on errors
+		On Error Resume Next
+
+		' handle constraints on this product
+		' ----------------------------------
+
+		Set ProductConstraints = oCurrentProduct.Connections("CATIAConstraints")
+		If ProductConstraints.Count <> 0 Then
+
+				'Loop on Csts
+				For I = 1 To ProductConstraints.Count
+						ProcessConstraint ProductConstraints.Item(I)
+				Next
+		End If
+ 
+		' recursively handle sub-products
+		' -------------------------------
+
+		Dim ProductChildren 'As Product
+		For Each ProductChildren In oCurrentProduct.Products
+
+				' test if it is a Product (based on having at least a child)
+				If ProductChildren.Products.Count <> 0 Then
+
+						'jump to the reference product
+						Dim TheReferenceProduct 'As Product
+						Set TheReferenceProduct = ProductChildren.ReferenceProduct
+       
+						SelectConstraints TheReferenceProduct
+				Else
+						'MsgBox ProductChildren.Name & " is probably a leaf document (part, model,...)!", , "Select broken constraints"
+				End If
+		Next
+
+		Set ProductChildren = Nothing
+
+End Sub
+
+'=============================================
+Sub ProcessConstraint(iConstraint)
+
+		' the test is based on GetConstraintElement returning an error
+		On Error Resume Next
+
+		Dim iConstraintType 'As CatConstraintType
+		iConstraintType = iConstraint.Type
+
+		Dim iConstraintStatus 'As CatConstraintStatus
+		iConstraintStatus = iConstraint.Status
+
+		Dim ReferenceTmp 'As Reference
+		Dim addInSelection
+		addInSelection = False
+  
+		' all constraints have a first element
+		Set ReferenceTmp = iConstraint.GetConstraintElement(1)
+
+		If Err.Number <> 0 Then ' First element is not found
+				addInSelection = True
+		Else 
+				If iConstraintType <> 0 Then 'Case other than Fix Constraint
+
+						' other constraints have at least 2 elements
+						Set ReferenceTmp = iConstraint.GetConstraintElement(2)
+
+						If Err.Number <> 0 Then ' Second element is not found
+								addInSelection = True
+						Else
+								If iConstraintType = catCstTypePlanarAngle Then 'Planar Angle Constraint
+
+										' Planar Angle have 3 elements
+										Set ReferenceTmp = iConstraint.GetConstraintElement(3)
+
+										If Err.Number <> 0 Then ' Third element is not found
+												addInSelection = True
+										End If
+								End If
+						End If
+				End If
+		End If
+
+		If addInSelection = True Then
+				mySelection.Add iConstraint
+		Else
+				If DetectAll = "YES" And iConstraintStatus = catCstStatusKOBroken Then
+						mySelection.Add iConstraint
+				End If
+		End If
+
+		Err.Clear
+      
+End Sub
+
+
+

@@ -1,0 +1,32 @@
+' lock/unlock view, (c) ema, lm:1.1.2009
+'
+Language="VBSCRIPT"
+Sub CATMain()
+' ******************************* test if drawing is open ********************************
+  If CATIA.Documents.Count = 0 Then
+    MsgBox "There is no CATIA Drawing file open.  Open a drawing file and run this script again.", ,msgboxtext
+    Exit Sub
+  End If
+  If InStr(CATIA.ActiveDocument.Name, ".CATDrawing") < 1 Then
+    MsgBox "Active CATIA Document is not a Drawing.  Open a Drawing file and run this script again.", ,msgboxtext
+    Exit Sub
+  End If
+' ******************************* variables *******************************************
+  Set objNetwork = CreateObject("Wscript.Network")
+  Set DrwDoc = CATIA.ActiveDocument
+  Set DrwSheets = DrwDoc.Sheets
+  Set Sheet = DrwSheets.ActiveSheet
+  Set DrwViews = Sheet.Views
+  Set View = DrwViews.ActiveView
+  msgboxtext="e3lockView"
+' ******************************* Lock View *******************************************
+  if(View.LockStatus) then
+    View.LockStatus = false
+    lock=1
+  else
+    View.LockStatus = True
+    lock=0
+  end if
+' msgbox View.name  & vbCrLf & View.LockStatus, ,msgboxtext
+  exit sub
+End Sub

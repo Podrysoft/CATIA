@@ -1,0 +1,39 @@
+Sub CATMain()
+
+Dim doc As Document
+Dim iDoc As Integer
+Dim folderinput As String
+Dim pathigs As String
+
+folderinput = InputBox("save your pdf files here","folder",CATIA.Documents.Item(1).Path & "\",2000,4000)
+
+'If folderinput=0 then exit sub
+
+For iDoc = 1 To CATIA.Documents.Count
+
+msgbox TypeName(CATIA.Documents.Item(iDoc))
+
+'	If (TypeName(CATIA.Documents.Item(iDoc)) = "DrawingDocument") Then
+
+		Set doc = CATIA.Documents.Item(iDoc)
+
+		msgbox doc.name
+		
+'		Set window1 = CATIA.ActiveWindow
+'		Set specsViewer1 = window1.ActiveViewer
+
+'		Filename = Left(doc.Name, Len(doc.Name) - 11)
+
+'		CATIA.StatusBar = "Convirtiendo " & Filename & " (" & iDoc & "/" & CATIA.Documents.Count & ")"
+
+'		pathigs = folderinput & Filename & ".igs"
+			
+'		docDrawing.ExportData pathigs, "igs"
+
+'	End If
+	
+Next
+
+MsgBox ("Macro finalizada.")
+
+End Sub

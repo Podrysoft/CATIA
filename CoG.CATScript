@@ -1,0 +1,215 @@
+Option Explicit
+
+Dim oProd As Document
+Dim oCoordinates(2) As Real
+Dim Resp As Integer
+
+
+'Principal
+Sub CATMain()
+
+	Dim oExt as String
+
+	On Error Resume Next
+	CATIA.DisplayFileAlerts = False
+
+	Set oProd = CATIA.ActiveDocument
+
+	If Err.Number <> 0 Then
+		MsgBox "No tiene documento abierto!", vbInformation
+		Exit Sub
+	End If
+
+	On Error Goto 0
+
+	oExt = LCase(Mid(oProd.Name,InStr(1,oProd.Name,".")+1,Len(oProd.Name)-InStr(1,oProd.Name,".")))
+
+	Select Case oExt
+		Case "catpart"
+			CdG
+			If Resp = vbYes then Part(oProd.Part)
+		Case "catproduct"
+			CdG
+			If Resp = vbYes then Product
+		Case "catdrawing"
+			MsgBox "No se puede hallar el CdG de un CATDrawing", vbInformation
+	End Select
+
+	oProd.Activate()
+	
+	On Error Goto 0
+	CATIA.DisplayFileAlerts = True
+
+End Sub
+
+
+'Centro de Gravedad del fichero activo (Part o Product)
+Sub CdG()
+
+	Dim oInertia As Inertia
+	Dim Texto As String
+
+	CATIA.StatusBar = "Calculando CdG..."
+	Set oInertia = oProd.Product.ReferenceProduct.GetTechnologicalObject("Inertia")
+	oInertia.GetCOGPosition oCoordinates
+	Texto = "Masa" &_
+			vbNewLine & CStr(Round(oInertia.Mass,3)) & " Kg" &_
+			vbNewLine &_
+			vbNewLine & "Centro de Gravedad" &_
+			vbNewLine & "X : " & CStr(Round((oCoordinates(0)*1000),3)) & " mm" &_
+			vbNewLine & "Y : " & CStr(Round((oCoordinates(1)*1000),3)) & " mm" &_
+			vbNewLine & "Z : " & CStr(Round((oCoordinates(2)*1000),3)) & " mm" &_
+			vbNewLine &_
+			vbNewLine & "¿ Crear/Actualizar centro de gravedad ?"
+	Resp = MsgBox (Texto,vbYesNo+vbQuestion+vbDefaultButton2,oProd.Name)
+
+End Sub
+
+
+'Crea un Geometrical Set donde se incluye un punto CdG
+Sub Part(NombrePart As Part)
+
+	Dim hybridBodies1 As HybridBodies
+	Dim hybridBody1 As HybridBody
+	Dim hybridShapeFactory1 As Factory
+	Dim hybridShapePointCoord1 As HybridShapePointCoord
+	Dim Geom As Object
+	Dim SelecSet, SelecPunto, HybridSelec As Select
+	Dim VisPropSet1 As Select
+
+	Set hybridBodies1 = NombrePart.HybridBodies
+	
+	For Each Geom In hybridBodies1
+		If Geom.Name = "CdG" then
+			'Borrar Geometrical Set CdG
+			Set SelecSet = oProd.Selection
+			Set HybridSelec = hybridBodies1.Item("CdG")
+			SelecSet.Clear
+			SelecSet.Add HybridSelec
+			SelecSet.Delete
+		End If
+	Next
+
+	'Crear Geometrical Set y punto CdG
+	Set hybridBody1 = hybridBodies1.Add()
+	Set hybridShapeFactory1 = NombrePart.HybridShapeFactory
+	Set hybridShapePointCoord1 = hybridShapeFactory1.AddNewPointCoord(oCoordinates(0)*1000,oCoordinates(1)*1000,oCoordinates(2)*1000)
+	hybridBody1.Name = "CdG"
+	hybridShapePointCoord1.Name = "CdG Point"
+	hybridBody1.AppendHybridShape hybridShapePointCoord1
+	NombrePart.Update 
+
+	'Cambia forma y color del punto
+	Set SelecPunto = oProd.Selection
+	SelecPunto.Clear
+	SelecPunto.Add hybridShapePointCoord1
+	Set VisPropSet1 = SelecPunto.VisProperties
+	VisPropSet1.SetRealColor 255,0,0,1
+	VisPropSet1.SetSymbolType 4
+	NombrePart.Update 
+
+End Sub
+
+
+Sub Product()
+
+	Dim Texto As String
+
+	Texto = "Sí = Seleccionar una Part donde insertar el CdG" &_
+				vbNewLine & "No = Crear una Part para insertar el CdG"
+	Resp = MsgBox (Texto, vbYesNoCancel+vbQuestion+vbDefaultButton3, oProd.Name)
+	Select Case Resp
+		Case vbYes
+			SelecPart
+		Case vbNo
+			CrearPart
+		Case vbCancel
+			Exit Sub
+	End Select
+
+End Sub
+
+
+Sub CrearPart()
+
+	Dim Nombre As String
+	Dim Product1 As Product
+	Dim Products1 As Products
+	Dim Product2 As Product
+	Dim Selection1 As Selection
+	Dim Documents1 As Documents
+	Dim PartDocument1 As Document
+	Dim SelectPart As Selection
+	Dim VisPropertySet1 As VisPropertySet
+	
+	Nombre = Mid(oProd.Name, 1, InStr(1,oProd.Name,".")-1) & "_CdG"
+
+	Set Product1 = oProd.Product
+	Set Products1 = Product1.Products
+	Set Selection1 = oProd.Selection
+	Selection1.Clear
+	Selection1.Search ("Name=" & Nombre & ",all")
+
+	If Selection1.Count=0 Then
+		Set Product2 = Products1.AddNewComponent("Part", Nombre)
+		Set Documents1 = CATIA.Documents
+		Set PartDocument1 = Documents1.Item(Nombre & ".CATPart")
+		Set SelectPart = CATIA.ActiveDocument.Selection
+
+		SelectPart.Add(partDocument1.Part)
+		CATIA.StartWorkbench("PrtCfg")
+		SelectPart.Clear()
+		PartDocument1.Activate()
+	Else
+		Set Documents1 = CATIA.Documents
+		Set PartDocument1 = Documents1.Item(Nombre & ".CATPart")
+	End If
+	
+	Selection1.Clear
+	
+	'Ocultar los planos de la Part	
+	Selection1.Search "CatPrtSearch.Plane,in"
+	Set VisPropertySet1 = Selection1.VisProperties
+	VisPropertySet1.SetShow catVisPropertyNoShowAttr
+	Selection1.Clear 
+
+	Part (PartDocument1.Part)
+
+End Sub
+
+
+Sub SelecPart()
+
+	Dim SelecProd As Select
+	Dim Filter(0)
+	Dim Status As String
+	Dim ObjProd As Object
+	Dim Documents1 As Documents
+	Dim PartDocument1 As Document
+	Dim Nombre As String
+    
+	'Part Seleccion
+	Set SelecProd = CATIA.ActiveDocument.Selection
+	SelecProd.Clear
+	Filter(0) = "Product"
+	Status = SelecProd.SelectElement2(Filter, "Selecciona una Part", False)
+
+	If Status = "Cancel" then
+		Exit Sub
+	End If
+
+	Set ObjProd=SelecProd.Item(1).Value	
+	If ObjProd.Products.Count > 0 Then
+		MsgBox "Selecciona una Part!", vbInformation
+		Exit Sub
+	End If
+	
+	Nombre = Mid(ObjProd.Name,1,InStr(1,ObjProd.Name,".")-1)
+	
+	Set Documents1 = CATIA.Documents
+	Set PartDocument1 = Documents1.Item(Nombre & ".CATPart")
+	SelecProd.Clear
+
+	Part (partDocument1.Part)
+
+End Sub

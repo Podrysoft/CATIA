@@ -1,0 +1,169 @@
+Sub CATMain()
+
+Dim oPartDoc As Document
+Dim oProdDoc As Document
+Dim oPart As Part
+Dim oProd As Product
+Dim oPartParams As Parameters
+Dim oProdParams As Parameters
+Dim oProdRelations As Relations
+Dim oPartRelations As Relations
+Dim oRootParamSet As ParameterSet
+Dim oParamSets As ParameterSets
+Dim oSubParamSet As ParameterSets
+Dim StrPartParam As Parameter
+Dim strPartParamVariant
+Dim strProdParamVariant
+Dim formula As Formula
+Dim oResponse As String
+
+If UCase(Right(CATIA.ActiveDocument.Name,7))="CATPART" Then
+
+	Set oPartDoc = CATIA.ActiveDocument
+	Set oPart  = oPartDoc.Part
+	Set oPartParams = oPart.Parameters
+	Set oRootParamSet = oPartParams.RootParameterSet
+	Set oParamSets = oRootParamSet.ParameterSets
+	
+	
+	'Nuevo
+	
+
+	For nParam = 1 to oParamSets.Count
+		Set oSubParamSet  = oParamSets.GetItem(oParamSets.Item(nParam).Name)
+		Set StrPartParam  = oSubParamSet.DirectParameters
+		MsgBox StrPartParam.Count
+		For i = 1 to StrPartParam.Count
+			MsgBox StrPartParam.Item(i).Name & " = " & StrPartParam.Item(i).Value
+		Next
+	Next
+	
+	Exit Sub
+	
+	
+	'Set oSubParamSet  = oParamSets.GetItem("MATERIAL , DIMESIONES, TRATAMIENTOS")
+	
+	On error Resume Next
+	Set StrPartParam  = oSubParamSet.DirectParameters.Item("PROTECCION")
+	If Err.Number <> 0 Then
+		Err.Clear
+		Set StrPartParam  = oSubParamSet.DirectParameters.Item("ACABADO")
+	End If
+
+	'Multi value
+	Dim MultiPartValue02(8) As Object
+	MultiPartValue02(0) = "BALINIT A JAUNE/AMARILLO"
+	MultiPartValue02(1) = "ZINGAGE ELECTROLITIQUE CHROMÉ EN JAUNE - Zn12/C"
+	MultiPartValue02(2) = "BRUNI/PAVONADO"
+	MultiPartValue02(3) = "BRUNIFER"
+	MultiPartValue02(4) = "---"
+	MultiPartValue02(5) = "AFNOR A680/RAL 7035"
+	MultiPartValue02(6) = "AFNOR A450/RAL 6032"
+	MultiPartValue02(7) = "AFNOR A310/RAL 1003"
+	MultiPartValue02(8) = "SEE NOTE / VER NOTA"
+	set strPartParamVariant = StrPartParam
+	strPartParamVariant.SetEnumerateValues(MultiPartValue02)
+	StrPartParam.Value = "---"
+
+	Set StrPartParam  = oSubParamSet.DirectParameters.Item("TIPO_FABRICACION")
+	Dim MultiPartValue01(3) As Object
+	MultiPartValue01(0) = "OXI/TEMPLATE"
+	MultiPartValue01(1) = "OXI&CAM/TEMPLATE&CAM"
+	MultiPartValue01(2) = "CALIBRADO/CALIBRATED"
+	MultiPartValue01(3) = "---"
+	set strPartParamVariant = StrPartParam
+	strPartParamVariant.SetEnumerateValues(MultiPartValue01)
+	StrPartParam.Value = "---"
+	
+	Set StrPartParam  = oSubParamSet.DirectParameters.Item("MATERIAL")
+	Dim MultiPartValue04(12) As Object
+	MultiPartValue04(0) = "S235JR/F-111"
+	MultiPartValue04(1) = "XC-15/F-111"
+	MultiPartValue04(2) = "35NCD4/F-125"	
+	MultiPartValue04(3) = "XC-45/F-114"
+	MultiPartValue04(4) = "Z160CDV12/F-530"
+	MultiPartValue04(5) = "40CMD8+S/F-530"
+	MultiPartValue04(6) = "HS6-5-2C/F-174"
+	MultiPartValue04(7) = "LAITON/LATON"
+	MultiPartValue04(8) = "---"
+	MultiPartValue04(9) = "ELKONITE"
+	MultiPartValue04(10) = "AW-2017"
+	MultiPartValue04(11) = "AW-6060"
+	MultiPartValue04(12) = "AW-7075"
+	set strPartParamVariant = StrPartParam
+	strPartParamVariant.SetEnumerateValues(MultiPartValue04)
+	StrPartParam.Value = "---"
+
+	Set StrPartParam  = oSubParamSet.DirectParameters.Item("TRATAMIENTO")
+	Dim MultiPartValue03(7) As Object
+	MultiPartValue03(0) = "---"
+	MultiPartValue03(1) = "T6(58 HRC)/Temp.Y Rev.58 HRC"
+	MultiPartValue03(2) = "pré-traité 110daN"
+	MultiPartValue03(3) = "ESTABILIZAR ANTES DE MECANIZAR/STABILIZE BEFORE MACHINING"
+	MultiPartValue03(4) = "BONIFICADO 800Nmm²/HEAT-TREATED 800Nmm²"
+	MultiPartValue03(5) = "BONIFICADO 80KG/MM²"	
+	MultiPartValue03(6) = "NITRURE TITANE (62/64 HRC)/NITRURADO TITANIO"
+	MultiPartValue03(7) = "NITRURADO/NITRIDE"
+	set strPartParamVariant = StrPartParam
+	strPartParamVariant.SetEnumerateValues(MultiPartValue03)
+	StrPartParam.Value = "---"
+
+	'Set StrPartParam  = oSubParamSet.DirectParameters.Item("MATERIAL")
+	'Set formula = oPartRelations.CreateFormula("SERRA_MATERIAL", "", StrPartParam, "Material ")
+	'formula.Hidden = True
+
+'********************************************************************************************************************************************	
+'********************************************************************************************************************************************	
+'********************************************************************************************************************************************
+	
+ElseIf UCase(Right(CATIA.ActiveDocument.Name,10))="CATPRODUCT" Then
+
+	Set oProdDoc = CATIA.ActiveDocument
+	Set oProd = oProdDoc.Product
+	Set oProdRelations = oProd.Relations
+	Set oProdParams = oProd.Parameters
+	
+	On Error Resume Next
+	oProdRelations.Remove("SERRA_MATERIAL")
+	
+	Set StrProdParam = oProdParams.Item("DENOMINACION")
+	Dim arrayOfVariantOfBSTR1(1)
+	arrayOfVariantOfBSTR1(0) = "CJTO. SOLDADO / WELDING ASSEMBLY"
+	arrayOfVariantOfBSTR1(1) = "PANEL PROTECCION / PROTECTIVE PANEL"
+	set strProdParamVariant = StrProdParam
+	strProdParamVariant.SetEnumerateValues (arrayOfVariantOfBSTR1)
+	StrProdParam.Value = "CJTO. SOLDADO / WELDING ASSEMBLY"
+	
+		
+	Set StrProdParam = oProdParams.Item("MATERIAL")
+	Dim arrayOfVariantOfBSTR2(3)
+	arrayOfVariantOfBSTR2(0) = "XC-15/F-111"
+	arrayOfVariantOfBSTR2(1) = "S235JR/F-111"
+	arrayOfVariantOfBSTR2(2) = "----"
+	arrayOfVariantOfBSTR2(3) = "LAITON/LATON"
+	set strProdParamVariant = StrProdParam
+	strProdParamVariant.SetEnumerateValues (arrayOfVariantOfBSTR2)
+	StrProdParam.Value = "-----"
+	
+	
+	Set StrProdParam = oProdParams.Item("PROTECCION")
+	Dim arrayOfVariantOfBSTR3(4)
+	arrayOfVariantOfBSTR3(0) = "ZINGAGE ELECTROLITIQUE CHROMÉ EN JAUNE - Zn12/C"
+	arrayOfVariantOfBSTR3(1) = "-----"
+	arrayOfVariantOfBSTR3(2) = "AFNOR A680/RAL 7035"
+	arrayOfVariantOfBSTR3(3) = "AFNOR A450/RAL 6032"
+	arrayOfVariantOfBSTR3(4) = "AFNOR A310/RAL 1003"
+	set strProdParamVariant = StrProdParam
+	strProdParamVariant.SetEnumerateValues (arrayOfVariantOfBSTR3)
+	StrProdParam.Value = "-----"
+	
+	
+	'Set StrProdParam = oProdParams.Item("MATERIAL")
+	'Set formula = oProdRelations.CreateFormula("SERRA_MATERIAL", "", StrProdParam, "Material ")
+	'formula.Hidden = True
+	
+End If
+
+CATIA.StatusBar = "*******************     Parametros Actualizados!     *******************"
+
+End Sub

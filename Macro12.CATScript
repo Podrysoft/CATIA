@@ -1,0 +1,21 @@
+' Macro para insertar Detalle en la vista
+' Se coloca en 0,0 y en color verde
+' Realizado por: David Rodriguez
+
+Option Explicit
+
+Sub CATMain()
+
+Dim oDoc As Document
+
+
+Set oDoc = CATIA.ActiveDocument
+
+If (TypeName(oDoc) = "DrawingDocument") Then
+	
+	msgbox("DAvid")
+Else
+	MsgBox "El documento debe ser un CATDrawing", vbOKOnly + vbInformation, "Atención"
+End If
+
+End Sub

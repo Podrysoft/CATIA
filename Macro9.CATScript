@@ -1,0 +1,115 @@
+Sub CATMain()
+
+Dim DrwDoc As DrawingDocument
+Dim DrwSheets As DrawingSheets
+Dim DrwSheet As DrawingSheet
+Dim DrwViews As DrawingViews
+Dim DrwView As DrawingView
+Dim oSel As Selection
+Dim oSelView As Selection
+Dim Status
+
+On Error Resume Next
+
+If LCase(Right(CATIA.ActiveDocument.Name, 10)) <> "catdrawing" Then
+      MsgBox "Esta macro funciona con un CATDrawing abierto!", vbInformation, "Isolar Vista - Version 1.00"
+      Exit Sub
+End If
+
+Set DrwDoc = CATIA.ActiveDocument
+Set DrwSheets = DrwDoc.Sheets
+Set DrwSheet = DrwSheets.ActiveSheet
+Set DrwViews = DrwSheet.Views
+Set oSel = CATIA.ActiveDocument.Selection
+
+oSel.Clear
+
+Dim InputObjectType(0)
+InputObjectType(0) = "DrawingView"
+Status = "Normal"
+Status = oSel.SelectElement2(InputObjectType, "**********     Seleccione la vista!     **********", False)
+If Status = "Cancel" Then
+    MsgBox "Macro Cancelada por el Usuario!", vbExclamation, "Warning"
+    Exit Sub
+Else
+	'CATIA.StartCommand("Isolate")
+	
+	oSel.Item(1).Copy
+	
+	b
+	
+	'oSel.Item(1).Paste
+End If
+
+oSel.Clear
+CATIA.StatusBar = "**********     TERMINADO!     **********"
+
+End Sub
+
+
+
+
+
+sub a()
+
+msgbox ("DAVID")
+
+Dim drawingDocument1 As Document
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Dim selection1 As Selection
+Set selection1 = drawingDocument1.Selection
+
+selection1.Clear 
+
+Dim drawingSheets1 As DrawingSheets
+Set drawingSheets1 = drawingDocument1.Sheets
+
+Dim drawingSheet1 As DrawingSheet
+Set drawingSheet1 = drawingSheets1.Item("OXICORTE")
+
+Dim drawingViews1 As DrawingViews
+Set drawingViews1 = drawingSheet1.Views
+
+Dim drawingView1 As DrawingView
+Set drawingView1 = drawingViews1.Item("Front view")
+
+selection1.Add drawingView1
+
+selection1.Copy 
+
+Set drawingDocument1 = CATIA.ActiveDocument
+
+Dim selection2 As Selection
+Set selection2 = drawingDocument1.Selection
+
+selection2.Clear 
+
+selection2.Add drawingSheet1
+
+selection2.Paste 
+
+Dim drawingView2 As DrawingView
+Set drawingView2 = drawingViews1.Item("David")
+
+drawingView2.x = -98.971702
+
+drawingView2.y = 198.555154
+
+End Sub
+
+
+
+Sub B()
+
+Dim drawingView2 As DrawingView
+Set drawingView2 = CATIA.ActiveDocument.Sheets.Item("DETALLES").Views.Add("AutomaticNaming")
+
+Dim drawingViewGenerativeBehavior2 As DrawingViewGenerativeBehavior
+Set drawingViewGenerativeBehavior2 = drawingView2.GenerativeBehavior
+
+drawingViewGenerativeBehavior2.DefineIsometricView 1.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000
+
+drawingView2.Scale = 1.000000
+
+End Sub

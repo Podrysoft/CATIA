@@ -1,0 +1,55 @@
+' Macro para insertar parentesis en la cota seleccionada
+' Realizado por: David Rodriguez
+
+Option Explicit
+
+Sub CATMain()
+
+Dim DrawingDimension As DrawingDimension
+Dim oDoc As Document
+Dim oSel As Object
+Dim oStatus As String
+Dim i As Integer
+Dim AntDIM, DesDIM, ArrDIM, AbaDIM As String
+
+Set oDoc = CATIA.ActiveDocument
+
+If (TypeName(oDoc) = "DrawingDocument") Then
+	
+	Set oSel = CATIA.ActiveDocument.Selection
+	
+	If oSel.Count = 0 Then
+		ReDim strArray(0)
+		strArray(0) = "DrawingDimension"
+		oStatus = oSel.SelectElement2(strArray, "Selecciona una cota...", False) 'Selecciona dimension
+		If (oStatus = "Cancel") Then
+			Exit Sub
+		End If
+	End If
+		
+	For i = 1 To oSel.Count
+	
+		AntDIM = ""
+		DesDIM = ""
+		ArrDIM = ""
+		AbaDIM = ""
+		
+		Set DrawingDimension = oSel.Item(i).Value	
+		DrawingDimension.GetValue.GetBaultText 1, AntDIM, DesDIM, ArrDIM, AbaDIM
+		If AntDIM = "(" Then
+			AntDIM = ""
+		Else
+			AntDIM = "("
+		End If
+		If DesDIM = ")" Then
+			DesDIM = ""
+		Else
+			DesDIM = ")"
+		End If
+		DrawingDimension.GetValue.SetBaultText 1, AntDIM, DesDIM, ArrDIM, AbaDIM
+	Next
+Else
+	MsgBox "El documento debe ser un CATDrawing", vbOKOnly + vbInformation, "Atención"
+End If
+
+End Sub

@@ -1,0 +1,154 @@
+Sub CATMain()
+
+On Error Resume Next
+
+Dim oPartDoc As PartDocument
+Dim oCurrentDoc As Document
+Dim oPart As Product
+Dim oInertia As Inertia
+Dim InputObjectType(1) As Variant
+Dim Status As String
+Dim oSelection As Variant
+Dim bCloseDoc As Boolean
+
+Set oCurrentDoc = CATIA.ActiveDocument
+
+'Exclude Drawings
+If Right(oCurrentDoc.Name, 4) = "wing" Then
+MsgBox "This function only operates on a part or product"
+Exit Sub
+End If
+
+
+Set oSelection = oCurrentDoc.Selection
+
+If Right(oCurrentDoc.Name, 4) = "Part" Then
+Set oPart = oCurrentDoc.Product
+oSelection.Add oPart
+'GoTo RunBBOpenWindow
+End If
+
+
+If Right(oCurrentDoc.Name, 4) = "duct" Then
+bCloseDoc = True
+InputObjectType(0) = "Part"
+InputObjectType(1) = "Product"
+oSelection.Clear
+Status = oSelection.SelectElement2(InputObjectType, "Pick a Part, Escape to Cancel", False)
+If Status = "Cancel" Then Exit Sub
+Set oPart = oSelection.Item2(1).LeafProduct.ReferenceProduct
+If oPart.Name = oCurrentDoc.Product.Name Then
+bCloseDoc = False
+'GoTo RunBBOpenWindow
+End If
+CATIA.StartCommand "open in new window"
+End If
+
+RunBBNewWindow:
+
+Set oPart = CATIA.ActiveDocument.Product
+Dim oSelection2
+Set oSelection2 = CATIA.ActiveDocument.Selection
+oSelection2.Add oPart
+
+RunBBOpenWindow:
+
+
+CATIA.StartCommand "Measure Inertia"
+
+Dim xDim As String
+Dim yDim As String
+Dim zDim As String
+
+xDim = oPart.Parameters.GetItem("BBLx").Value
+yDim = oPart.Parameters.GetItem("BBLy").Value
+zDim = oPart.Parameters.GetItem("BBLz").Value
+
+xDim = CStr(Round(xDim, 0))
+yDim = CStr(Round(yDim, 0))
+zDim = CStr(Round(zDim, 0))
+
+Dim oMatParam As Parameter
+Dim sMatParam As String
+Set oMatParam = oPart.Parameters.GetItem("Definition")
+
+sMatParam = oMatParam.ValueAsString
+
+Dim oMassParam As Parameter
+Dim sMassParam As String
+Set oMassParam = oPart.UserRefProperties.GetItem("PDB_MASS")
+
+
+sMassParam = oMassParam.ValueAsString
+If sMassParam = "" Then sMassParam = "0"
+
+If sMassParam = "0" Then
+sMassParam = ""
+If Right(CATIA.ActiveDocument.Name, 4) = "Part" Then
+Set oInertia = oPart.GetTechnologicalObject("Inertia")
+
+Select Case oInertia.Density
+
+Case 0
+sMassParam = ""
+
+Case 1000
+sMassParam = ""
+
+Case Else
+sMassParam = CStr(Round(oInertia.Mass, 1))
+
+End Select
+
+End If
+
+End If
+
+
+CATIA.StatusBar = "Start Creating Params"
+
+Call SetParam(oPart, "LENGTH", xDim)
+Call SetParam(oPart, "WIDTH", yDim)
+Call SetParam(oPart, "THICKNESS/DIAMETER", zDim)
+Call SetParam(oPart, "MATERIAL", sMatParam)
+Call SetParam(oPart, "MASS", sMassParam)
+
+
+MsgBox "Properties Applied:" & _
+vbCrLf & "LENGTH: " & xDim & _
+vbCrLf & "WIDTH: " & yDim & _
+vbCrLf & "THICKNESS/DIAMETER: " & zDim & _
+vbCrLf & "MATERIAL: " & sMatParam & _
+vbCrLf & "MASS: " & sMassParam & _
+vbCrLf & "Check Results Carefully!", vbOKOnly, oPart.Name
+
+CATIA.DisplayFileAlerts = False
+CATIA.StartCommand "Save"
+'CATIA.ActiveDocument.Save
+CATIA.DisplayFileAlerts = True
+
+
+If bCloseDoc = True Then CATIA.ActiveDocument.Close
+
+CATIA.StatusBar = "Macro Finished"
+
+End Sub
+
+Sub SetParam(ByRef oPart As Product, Name As String, Value As String)
+
+'On Error GoTo CreateParam
+Dim sParam As Parameter
+Err.Clear
+
+Set sParam = oPart.UserRefProperties.GetItem(Name)
+sParam.ValuateFromString CStr(Value)
+
+'GoTo Finish
+
+CreateParam:
+oPart.UserRefProperties.CreateString Name, CStr(Value)
+
+Finish:
+
+
+End Sub
